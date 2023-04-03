@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from libs.psql import db
-from routers import users
+from routers import services, users
 
 app = FastAPI()
 
@@ -29,3 +29,4 @@ app.add_middleware(
 )
 
 app.include_router(users.router, prefix='/api/users')
+app.include_router(services.router, prefix='/api/services')
