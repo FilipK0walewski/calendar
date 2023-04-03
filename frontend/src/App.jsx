@@ -4,10 +4,12 @@ import { Calendar } from './pages/Calendar'
 import { Home } from './pages/Home'
 import { Login } from './pages/Login'
 import { Profile } from './pages/Profile'
+import { Services } from './pages/Services'
+
 import { Navigate, Route, Routes } from 'react-router-dom'
 
 import { useDispatch } from 'react-redux'
-import { setUsername } from './store/common'
+import { setUserData } from './store/common'
 
 import { useEffect } from 'react'
 import instance from './services/Common'
@@ -17,8 +19,8 @@ export default function App() {
 
   useEffect(() => {
     if (!instance.defaults.headers.common['token']) return
-    instance.get('/users/username').then(res => {
-      dispatch(setUsername(res.data.username))
+    instance.get('/users').then(res => {
+      dispatch(setUserData(res.data))
     })
   }, [])
 
@@ -30,6 +32,7 @@ export default function App() {
             <Route path='/' element={<Home />} />
             <Route path='/profile' element={<Profile />} />
             <Route path='/calendar' element={<Calendar />} />
+            <Route path='/types-of-services' element={<Services />} />
           </Route>
           <Route path='/login' element={<Login />} />
           <Route path='*' element={<Navigate to={'/'} />} />
