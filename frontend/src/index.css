@@ -43,3 +43,18 @@ body {
 input {
   color: black
 }
+
+.test {
+  background-color: rgba(255, 255, 255, 1);
+}
+
+input {
+  padding: 0.25rem;
+  border-radius: 0.25rem;
+  border: 1px solid #ccc;
+}
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  color: greenyellow;
+  padding: 0.25rem;
+}
