@@ -95,6 +95,7 @@ export const Calendar = () => {
         instance.post('/jobs', job).then(res => {
             console.log(res.data)
             setModal(false)
+            getSavedJobs()
         })
     }
 
