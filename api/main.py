@@ -6,7 +6,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
 
 from libs.psql import db
-from routers import services, users
+from routers import jobs, services, users
 
 app = FastAPI()
 
@@ -28,5 +28,6 @@ app.add_middleware(
     allow_headers=['*'],
 )
 
-app.include_router(users.router, prefix='/api/users')
+app.include_router(jobs.router, prefix='/api/jobs')
 app.include_router(services.router, prefix='/api/services')
+app.include_router(users.router, prefix='/api/users')
