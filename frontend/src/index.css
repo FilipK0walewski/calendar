@@ -40,7 +40,7 @@ body {
   color: black
 }
 
-input {
+input, select {
   color: black
 }
 
@@ -48,7 +48,7 @@ input {
   background-color: rgba(255, 255, 255, 1);
 }
 
-input {
+input, select {
   padding: 0.25rem;
   border-radius: 0.25rem;
   border: 1px solid #ccc;

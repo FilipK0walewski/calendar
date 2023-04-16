@@ -6,7 +6,7 @@ export const commonSlice = createSlice({
   initialState: {
     loggedIn: localStorage.getItem('token') ? true : false,
     username: null,
-    admin: false,
+    admin: true,
     notifications: [],
   },
   reducers: {
