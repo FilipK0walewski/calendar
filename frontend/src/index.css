@@ -52,10 +52,11 @@ input, select {
   padding: 0.25rem;
   border-radius: 0.25rem;
   border: 1px solid #ccc;
+  color: #1a1a1a;
+  background-color: azure;
 }
 
 input[type="date"]::-webkit-calendar-picker-indicator {
-  color: greenyellow;
   padding: 0.25rem;
 }
 
