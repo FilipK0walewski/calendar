@@ -11,17 +11,18 @@ router = APIRouter(
 
 @router.get('/')
 async def get_services():
-    return await db.fetch_all('select id, name from types_of_services')
+    return await db.fetch_all('select * from types_of_services')
 
 
 class Service(BaseModel):
     name: str
+    price: float
 
 
 @router.post('/')
 async def add_service(service: Service):
-    await db.execute('insert into types_of_services(name) values (:name)', {'name': service.name})
-    return service
+    await db.execute('insert into types_of_services(name, price) values (:name, :price)', {'name': service.name, 'price': service.price})
+    return {'message': 'Serwis dodany.'}
 
 
 @router.delete('/{service_id}')

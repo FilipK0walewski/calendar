@@ -83,7 +83,12 @@ export const Calendar = () => {
 
     const getServices = () => {
         instance.get('/services').then(res => {
-            setAvailableServices(res.data)
+            const tmp = {}
+            for (let i of res.data) {
+                tmp[i.id] = i.name
+            }
+            console.log(tmp)
+            setAvailableServices(tmp)
         })
     }
 
@@ -126,15 +131,14 @@ export const Calendar = () => {
     const handleJobAdd = () => {
         const tmpJob = job, serviceDays = []
         for (let day in jobServices) {
-            const tmp = { day }
-            for (let k in jobServices[day]) {
-                if (jobServices[day][k] === null || jobServices[day][k].length === 0) {
-                    dispatch(addNotification({ text: 'Popraw dane.', type: 0 }))
-                    return
-                }
-                tmp[k] = jobServices[day][k]
+            if (jobServices[day].length === 0) {
+                dispatch(addNotification({ text: `Brak uslug w dzien ${day}.`, type: 0 }))
+                return
             }
-            serviceDays.push(tmp)
+            for (let s of jobServices[day]) {
+                const tmp = { ...s, day }
+                serviceDays.push(tmp)
+            }
         }
         tmpJob['services'] = serviceDays
         instance.post('/jobs', tmpJob).then(res => {
@@ -178,19 +182,46 @@ export const Calendar = () => {
         })
     }
 
+    const [newServiceDays, setNewServiceDays] = useState({})
     const [serviceDays, setServiceDays] = useState([])
     useEffect(() => {
-        const tmpDays = [], tmpJobServices = {}
+        const tmpDays = [], tmpJobServices = {}, tmpNewServiceDays = {}
         let currentDate = new Date(job.dateFrom);
         while (currentDate <= new Date(job.dateTo)) {
             let tmp = getDateString(currentDate)
             tmpDays.push(tmp)
-            tmpJobServices[tmp] = { serviceType: null, estTime: 1, estPersons: 1 }
+            tmpJobServices[tmp] = []
+            tmpNewServiceDays[tmp] = { serviceType: "", estTime: 1, estPersons: 1 }
             currentDate.setDate(currentDate.getDate() + 1)
         }
         setServiceDays(tmpDays)
         setJobServices(tmpJobServices)
+        setNewServiceDays(tmpNewServiceDays)
     }, [step])
+
+    const handleNewServicesDaysChange = (d, e) => {
+        console.log(d, e.target.name, e.target.value)
+        setNewServiceDays({ ...newServiceDays, [d]: { ...newServiceDays[d], [e.target.name]: e.target.value } });
+    }
+
+    const handleNewServiceAdd = (d) => {
+        if (!newServiceDays[d].serviceType) {
+            dispatch(addNotification({ text: 'Wybierz rodzaj uslugi.', type: 0 }))
+            return
+        }
+        setJobServices({ ...jobServices, [d]: [...jobServices[d], newServiceDays[d]] })
+        setNewServiceDays({ ...newServiceDays, [d]: { serviceType: "", estTime: 1, estPersons: 1 } });
+    }
+
+    const handleNewServiceDelete = (d, index) => {
+        const res = window.confirm(`Usunac serwis ${index + 1} z dnia ${d}`)
+        if (!res) return
+        setJobServices(prevObject => {
+            const newList = [...prevObject[d]];
+            newList.splice(index, 1);
+            return { ...prevObject, [d]: newList };
+        });
+    }
 
     const [jobServicesAccepted, setJobServicesAccepted] = useState({})
     const handleJobServicesAccepted = (id, e) => {
@@ -201,6 +232,7 @@ export const Calendar = () => {
     const closeAll = () => {
         setModal(null)
         setJobEdit(false)
+        setSelectedDay(null)
         setStep(1)
         setJob({})
         setReadyToFinish(false)
@@ -233,8 +265,8 @@ export const Calendar = () => {
     return (
         <>
             {!(modal || selectedDay) ? null : <>
-                <div className="absolute w-full h-full bg-slate-400 opacity-50 top-0 left-0" onClick={() => { setModal(false); setJobEdit(false); setSelectedDay(null) }}></div>
-                <div className="absolute top-1/2 left-1/2 min-w-1/2 min-h-1/2 -translate-x-1/2 -translate-y-1/2 bg-slate-800 rounded-sm p-2 space-y-2 w-full md:w-96 min-w-max">
+                <div className="absolute w-full h-full bg-slate-400 opacity-50 top-0 left-0" onClick={closeAll}></div>
+                <div className="absolute bg-slate-800 rounded-sm p-4 space-y-2 top-12 left-0 md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full h-[calc(100%-3rem)] md:h-max md:max-h-[80%] md:min-w-[500px] md:w-max flex flex-col items-ceter overflow-y-auto">
                     {modal ? <>
                         {/* ADMIN ONLY */}
                         {/* JOB CREATION 2 STEPS */}
@@ -257,45 +289,62 @@ export const Calendar = () => {
                                     <textarea id="job-desc" rows="5" className="rounded-sm p-1 text-black" value={job.desc} onChange={e => setJob({ ...job, desc: e.target.value })} ></textarea>
                                 </div>
                                 <hr />
-                                <div className="w-full flex justify-end">
+                                <div className="w-full flex justify-between">
+                                    <button className="bg-rose-500 p-1 rounded-sm" onClick={closeAll}>anuluj</button>
                                     <button className="bg-green-500 p-1 rounded-sm" onClick={nextStep}>dalej</button>
                                 </div>
                             </> : step === 2 ? <>
                                 <p>nazwa: {job.name}</p>
                                 <p>kontrahent/miejsce: {job.desc}</p>
                                 {serviceDays.map(d => (
-                                    <div className="flex flex-col w-full lg:flex-row lg:items-end lg:space-x-2 bg-slate-700 p-1">
-                                        <p className="text-sm">{d}</p>
-                                        <div className="flex flex-col">
-                                            <label className="text-xs" htmlFor="service-type">rodzaj uslugi</label>
-                                            <select id="service-type" className="flex" name="serviceType" value={jobServices[d].serviceType} onChange={(e) => handleJobServiceChange(d, e)} >
-                                                <option value="">wybierz</option>
-                                                {availableServices.map(s => (
-                                                    <option value={s.id}>{s.name}</option>
+                                    <div className="flex flex-col w-full bg-slate-700 p-1 space-y-1">
+                                        <p className="text-sm text-rose-500">{d}</p>
+                                        {jobServices[d] && jobServices[d].length === 0 ? <p className="text-xs">brak uslug na ten dzien, dodaj</p> : <>
+                                            <ul className="list-disc list-inside">
+                                                {jobServices[d].map((li, lIndex) => (
+                                                    <li key={lIndex} className="text-xs cursor-pointer hover:text-rose-500" onClick={() => handleNewServiceDelete(d, lIndex)}>
+                                                        {availableServices[li.serviceType]} - {li.estTime}h - {li.estPersons} osob
+                                                    </li>
                                                 ))}
-                                            </select>
-                                        </div>
+                                            </ul>
+                                        </>}
 
-                                        <div className="flex flex-col">
-                                            <label className="text-xs" htmlFor="est-time">przwidywany czas</label>
-                                            <input id="est-time" type="number" min="1" name="estTime" value={jobServices[d].estTime} onChange={(e) => handleJobServiceChange(d, e)} />
-                                        </div>
+                                        <div className="flex flex-col lg:flex-row lg:items-end lg:space-x-2">
+                                            <div className="flex flex-col">
+                                                <label className="text-xs" htmlFor="service-type">rodzaj uslugi</label>
+                                                <select id="service-type" className="flex" name="serviceType" value={newServiceDays[d].serviceType} onChange={(e) => handleNewServicesDaysChange(d, e)} >
+                                                    <option value="">wybierz</option>
+                                                    {Object.keys(availableServices).map(s => (
+                                                        <option value={s}>{availableServices[s]}</option>
+                                                    ))}
+                                                </select>
+                                            </div>
 
-                                        <div className="flex flex-col">
-                                            <label className="text-xs" htmlFor="est-time">przwidywana liczba osob</label>
-                                            <input id="est-time" type="number" min="1" name="estPersons" value={jobServices[d].estPersons} onChange={(e) => handleJobServiceChange(d, e)} />
+                                            <div className="flex flex-col">
+                                                <label className="text-xs" htmlFor="est-time">przwidywany czas</label>
+                                                <input id="est-time" type="number" min="1" name="estTime" value={newServiceDays[d].estTime} onChange={(e) => handleNewServicesDaysChange(d, e)} />
+                                            </div>
+
+                                            <div className="flex flex-col">
+                                                <label className="text-xs" htmlFor="est-time">przwidywana liczba osob</label>
+                                                <input id="est-time" type="number" min="1" name="estPersons" value={newServiceDays[d].estPersons} onChange={(e) => handleNewServicesDaysChange(d, e)} />
+                                            </div>
+                                            <button className="p-1 bg-orange-500 rounded-sm text-sm" onClick={() => handleNewServiceAdd(d)}>dodaj usluge do dnia</button>
                                         </div>
                                         <hr />
                                     </div>
                                 ))}
                                 <div className="flex justify-between">
                                     <button className="p-1 rounded-sm bg-blue-500" onClick={() => setStep(i => i - 1)}>wstecz</button>
-                                    <button className="p-1 rounded-sm bg-green-500" onClick={() => handleJobAdd()}>dodaj</button>
+                                    <button className="p-1 rounded-sm bg-green-500" onClick={handleJobAdd}>dodaj</button>
                                 </div>
                             </> : null}
                         </> : selectedDay ? <>
                             {selectedDay in savedJobs ? <>
-                                <p>zlecenia na dzien {selectedDay}:</p>
+                                <div className="flex w-full justify-between items-center">
+                                    <p>zlecenia na dzien {selectedDay}:</p>
+                                    <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
+                                </div>
                                 <ul className="list-disc list-inside">
                                     {savedJobs[selectedDay].map(j => (
                                         <li className="cursor-pointer hover:underline" onClick={() => { setSelectedDay(null); setSelectedJob(j.id) }}>
@@ -303,7 +352,7 @@ export const Calendar = () => {
                                         </li>
                                     ))}
                                 </ul>
-                            </> : <p>brak zlencen w dniu {selectedDay}</p>}
+                            </> : <div className="w-full flex items-center justify-between"><p>brak zlencen w dniu {selectedDay}</p><button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button></div>}
                         </> : selectedJob ?
                             <div className="flex flex-col space-y-1 items-start min-w-96">
                                 {!selectedJobDetail ? <p>ladowanie</p> : <>
@@ -315,13 +364,13 @@ export const Calendar = () => {
                                     <p>kontrahent/miejsce: {selectedJobDetail.contractor_place}</p>
                                     <hr className="pb-4" />
 
-                                    {selectedJobDetail.accepted === false ? <div>
+                                    {selectedJobDetail.accepted === false ? <div className="w-full">
                                         <p className="text-sm">zlecenie nie zostalo jeszcze zaakceptowane</p>
                                         <hr />
-                                        <p className="text-sm">uslugi:</p>
+                                        <p className="text-sm">lista uslug:</p>
                                         <ul className="list-disc list-inside py-1">
                                             {selectedJobDetail.services.map(s => (
-                                                <li className="text-xs" key={s.id}>{s.day}({s.id}) - przewidywana liczna godzin: {s.estimated_time} - przewidywana liczna osob: {s.estimated_personel} </li>
+                                                <li className="text-xs" key={s.id}>{s.day}({s.id}) - {availableServices[s.service_type_id]} - {s.estimated_time}h - {s.estimated_personel} osob</li>
                                             ))}
                                         </ul>
                                         <div className="w-full flex justify-end">
@@ -353,7 +402,7 @@ export const Calendar = () => {
                                                                 </div>
                                                                 : <p className="text-sm">faktyczna libcza osob: {s.real_personel}</p>}
                                                         </div>
-                                                        {s.real_personel && s.real_time ? null : <button className="p-1 rounded-sm bg-blue-500" onClick={() => updateServiceDay(s.id)}>zapisz dzien</button>}
+                                                        {s.real_personel && s.real_time ? null : <button className="p-1 rounded-sm bg-blue-500" onClick={() => updateServiceDay(s.id)}>zapisz</button>}
                                                     </div>
                                                     <hr />
                                                 </>
@@ -370,8 +419,10 @@ export const Calendar = () => {
                                                     <input type="number" min="0" name="accommodation" value={finishData.accommodation || ''} onChange={handleFinishData} />
                                                 </div>
                                                 <button className="p-1 rounded-sm bg-green-500" onClick={finishJob}>zakoncz zlecenie</button>
+                                                <button className="p-1 rounded-sm bg-rose-500" onClick={() => setReadyToFinish(false)}>anuluj</button>
                                             </div> :
-                                            <div className="w-full flex justify-end pt-2">
+                                            <div className="w-full flex justify-between pt-2">
+                                                <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
                                                 <button className="p-1 rounded-sm bg-green-500" onClick={isJobReadyToFinish}>wprowadz dane koncowe</button>
                                             </div>
                                         }
@@ -389,10 +440,10 @@ export const Calendar = () => {
                                             <p className="text-sm mt-2">uslugi:</p>
                                             <ul className="list-disc list-inside">
                                                 {selectedJobDetail.services.map(s => (
-                                                    <li className="text-xs" key={s.id}>{s.day}({s.id}) - {s.service_name} - liczba osob: {s.real_personel} - liczba godzin: {s.real_time}</li>
+                                                    <li className="text-xs" key={s.id}>{s.day}({s.id}) - {s.service_name} - {s.real_time}h - {s.real_personel} osob</li>
                                                 ))}
                                             </ul>
-
+                                            <button className="mt-4 rounded-sm p-1 text-sm bg-rose-500" onClick={closeAll}>zamknij</button>
                                         </div> : null
                                     }
                                 </>

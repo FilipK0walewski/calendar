@@ -29,7 +29,7 @@ async def get_jobs():
 @router.get('/{job_id}')
 async def get_job(job_id: int):
     job = await db.fetch_one('select * from jobs where id = :id', {'id': job_id})
-    services = await db.fetch_all('select a.*, b.name as service_name from services a join types_of_services b on a.service_type_id = b.id and job_id = :job_id order by a.day', {'job_id': job_id})
+    services = await db.fetch_all('select a.*, b.name as service_name from services a join types_of_services b on a.service_type_id = b.id and job_id = :job_id order by a.day, a.id', {'job_id': job_id})
     job = dict(job._mapping)
     job['services'] = services
     return job
