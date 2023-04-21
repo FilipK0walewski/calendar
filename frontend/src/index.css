@@ -55,6 +55,10 @@ option {
   background-color: azure;
 }
 
+input[type="month"]::-webkit-calendar-picker-indicator {
+  filter: invert(100%);
+}
+
 ::-webkit-scrollbar {
   width: 10px;
   height: 10px;

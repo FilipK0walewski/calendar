@@ -458,15 +458,15 @@ export const Calendar = () => {
             <div className="space-y-4 h-full overflow-y-auto">
                 <div className="w-full flex justify-between py-1">
                     <input type="month" onChange={handleDateFromChange} />
-                    {admin ? <button className="p-1 bg-green-500 rounded-sm" onClick={() => { setModal(i => !i); setJobEdit(true) }}>dodaj zlecenie</button> : null}
+                    {admin ? <button className="p-1 bg-emerald-500 rounded-sm" onClick={() => { setModal(i => !i); setJobEdit(true) }}>dodaj zlecenie</button> : null}
                 </div>
                 {days.length === 0 ? null : <>
-                    <p>{monthNames[month]} {year}</p>
-                    <table className="hidden xl:table table-fixed w-full border-collapse border border-slate-400">
+                    <p className="text-center text-2xl">{monthNames[month]} {year}</p>
+                    <table className="hidden xl:table table-fixed w-full border-collapse border border-cyan-600">
                         <thead>
-                            <tr>
+                            <tr className="bg-cyan-500">
                                 {dayNames.map((d, i) => (
-                                    <th key={`h2-${i}`} className="border border-slate-300">{d}</th>
+                                    <th key={`h2-${i}`} className="py-2">{d}</th>
                                 ))}
                             </tr>
                         </thead>
@@ -476,19 +476,18 @@ export const Calendar = () => {
                                     {week.map((d, j) => (
                                         <>
                                             {d === null ?
-                                                <td key={`dn-${i}-${j}`} className="h-auto border border-slate-300 bg-slate-700">-</td>
+                                                <td key={`dn-${i}-${j}`} className="h-20 border border-slate-400 bg-slate-700"></td>
                                                 :
-                                                <td onClick={() => { setModal(true); setSelectedDay(d) }} key={`d-${i}-${j}`} className="border border-slate-300 h-16 hover:bg-green-600 hover:cursor-pointer p-1 ">
-                                                    {d}
-                                                    <div>
-                                                        {!savedJobs[d] ? null :
-                                                            <>
-                                                                <ul className="list-disc list-inside">
-                                                                    {savedJobs[d].map(k => (
-                                                                        <li className="text-xs">{k.name}({k.id})</li>
-                                                                    ))}
-                                                                </ul>
-                                                            </>
+                                                <td onClick={() => { setModal(true); setSelectedDay(d) }} key={`d-${i}-${j}`} className="h-32 border border-slate-400 hover:bg-slate-600 hover:cursor-pointer px-1 py-2">
+                                                    <div className="w-full h-full flex flex-col items-center space-y-4">
+                                                        <div className="w-8 h-8 bg-cyan-500 flex items-center justify-center rounded-full">
+                                                            {d.split('-')[2]}
+                                                        </div>
+                                                        {!savedJobs[d] ? null : <ul className="w-full space-y-1">
+                                                            {savedJobs[d].map(k => (
+                                                                <li className={`text-xs p-1 rounded text-center ${k.accepted !== true ? 'bg-rose-500' : 'bg-emerald-500'}`}>{k.name}({k.id})</li>
+                                                            ))}
+                                                        </ul>
                                                         }
                                                     </div>
                                                 </td>
@@ -504,15 +503,16 @@ export const Calendar = () => {
                             <div key={i} className="w-full space-y-2">
                                 {week.map((d, j) => (<>
                                     {d === null ? null :
-                                        <div key={j} className="bg-slate-600 px-2 py-4 roundex-xs hover:bg-green-500 hover:cursor-pointer" onClick={() => { setModal(true); setSelectedDay(d) }}>
+                                        <div key={j} className="bg-slate-600 px-2 py-4 roundex-xs hover:bg-slate-800 hover:cursor-pointer space-y-2" onClick={() => { setModal(true); setSelectedDay(d) }}>
                                             <p className="text-xs font-bold">{d} - tydzien {i + 1} - {dayNames[j]}</p>
                                             {!savedJobs[d] ? null : <>
-                                                <p className="text-sm">zlecenia:</p>
-                                                <ul className="list-disc list-inside">
+                                                <div className="flex flex-wrap space-x-2">
                                                     {savedJobs[d].map(k => (
-                                                        <li className="text-xs" key={k.id}>{k.name}({k.id})</li>
+                                                        <div className={`p-2 text-xs h-max rounded-sm ${k.accepted !== true ? 'bg-rose-500' : 'bg-emerald-500'}`} key={k.id}>
+                                                            {k.name}({k.id})
+                                                        </div>
                                                     ))}
-                                                </ul>
+                                                </div>
                                             </>
                                             }
                                         </div>

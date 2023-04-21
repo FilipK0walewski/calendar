@@ -8,7 +8,7 @@ const addLog = (text, n) => {
 
 const token = localStorage.getItem('token')
 const instance = axios.create({
-    baseURL: import.meta.env.VITE_API_BASE_URL || 'http://127.0.0.1:8000/api',
+    baseURL: import.meta.env.VITE_API_BASE_URL || 'https://pierdolnik.online/api',
 })
 
 if (token) instance.defaults.headers.common['token'] = token
