@@ -6,7 +6,8 @@ export const commonSlice = createSlice({
   initialState: {
     loggedIn: localStorage.getItem('token') ? true : false,
     username: null,
-    admin: true,
+    admin: null,
+    coordinator: null,
     notifications: [],
   },
   reducers: {
@@ -15,18 +16,21 @@ export const commonSlice = createSlice({
       localStorage.setItem('token', data.payload.token)
       state.loggedIn = true
       state.username = data.payload.username
-      state.notifications.push({ text: `Logged in as ${data.payload.username}.`, type: 0 })
+      state.notifications.push({ text: `Zalogowano jako ${data.payload.username}.`, type: 0 })
     },
     logOut: (state) => {
       delete instance.defaults.headers.common['token']
       localStorage.removeItem('token')
       state.loggedIn = false
       state.username = null
-      state.notifications.push({ text: 'Logged out.', type: 0 })
+      state.admin = null
+      state.coordinator = null
+      state.notifications.push({ text: 'Wylogowano.', type: 0 })
     },
     setUserData: (state, data) => {
       state.username = data.payload.username
       state.admin = data.payload.is_admin
+      state.coordinator = data.payload.is_coordinator
     },
     addNotification: (state, data) => {
       state.notifications.push({ text: data.payload.text, type: data.payload.type })

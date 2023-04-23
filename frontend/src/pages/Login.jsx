@@ -7,9 +7,8 @@ import { logIn } from '../store/common'
 
 export const Login = () => {
     const dispatch = useDispatch()
-    const loggedIn = useSelector((state) => state.common.loggedIn)
-
     const navigate = useNavigate()
+    const loggedIn = useSelector((state) => state.common.loggedIn)
 
     const [username, setUsername] = useState('')
     const [password, setPassword] = useState('')

@@ -4,6 +4,8 @@ import instance from "../services/Common"
 export const Profile = () => {
     const [profile, setProfile] = useState()
     const [inputs, setInputs] = useState({
+        username: "",
+        password: "",
         admin: false,
         coordinator: false
     });
@@ -16,9 +18,9 @@ export const Profile = () => {
         setInputs(values => ({ ...values, [name]: value }))
     }
 
-    const handleSubmit = (event) => {
+    const handleSubmit = async (event) => {
         event.preventDefault();
-        alert(JSON.stringify(inputs));
+        await instance.post('/users', inputs)
     }
 
     const getProfile = () => {
@@ -41,8 +43,8 @@ export const Profile = () => {
 
                     {profile.is_admin ?
                         <form className="flex flex-col space-y-1" onSubmit={handleSubmit}>
-                            <input name="username" className="w-96 text-slate-900" type="text" value={inputs.username || ""} onChange={handleChange} />
-                            <input name="password" className="w-96 text-slate-900" type="password" onChange={handleChange} />
+                            <input placeholder="nazwa użytkownika" name="username" className="w-96" type="text" value={inputs.username || ""} onChange={handleChange} />
+                            <input placeholder="hasło" name="password" className="w-96" type="password" onChange={handleChange} />
                             <label>
                                 <input name="admin" type="checkbox" value={inputs.admin || false} onChange={handleChange} />
                                 admin

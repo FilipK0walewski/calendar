@@ -8,7 +8,7 @@ import { Services } from './pages/Services'
 
 import { Navigate, Route, Routes } from 'react-router-dom'
 
-import { useDispatch } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
 import { setUserData } from './store/common'
 
 import { useEffect } from 'react'
@@ -16,14 +16,18 @@ import instance from './services/Common'
 
 export default function App() {
   const dispatch = useDispatch()
-
+  const loggedIn = useSelector((state) => state.common.loggedIn)
 
   useEffect(() => {
     if (!instance.defaults.headers.common['token']) return
     instance.get('/users').then(res => {
       dispatch(setUserData(res.data))
     })
-  }, [])
+  })
+
+  useEffect(() => {
+    console.log('logged in', loggedIn)
+  }, [loggedIn])
 
   return (
     <>

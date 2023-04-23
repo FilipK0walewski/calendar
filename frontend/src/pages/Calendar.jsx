@@ -10,12 +10,12 @@ export const Calendar = () => {
 
     const dispatch = useDispatch()
     const admin = useSelector((state) => state.common.admin)
+    const coordinator = useSelector((state) => state.common.coordinator)
 
     const [availableServices, setAvailableServices] = useState([])
     const [savedJobs, setSavedJobs] = useState([])
 
-    const [month, setMonth] = useState()
-    const [year, setYear] = useState()
+    const [date, setDate] = useState({ month: null, year: null })
     const [days, setDays] = useState([])
 
     const [modal, setModal] = useState(false)
@@ -36,49 +36,53 @@ export const Calendar = () => {
         return `${yyyy}-${mm}-${dd}`;
     }
 
-    const getDaysInMonth = (year, month) => {
+    const setDaysInMonth = () => {
         const days = []
-        const date = new Date(year, month, 1);
+        const monthDate = new Date(date.year, date.month, 1);
 
         let week = []
-        while (date.getMonth() === month) {
-            const cDate = new Date(date)
+        while (monthDate.getMonth() === date.month) {
+            const cDate = new Date(monthDate)
             const strDate = getDateString(cDate)
             week.push(strDate)
 
-            const day = date.getDay()
+            const day = monthDate.getDay()
             if (day === 0) {
                 for (let i = week.length; i < 7; i++) week.unshift(null)
                 days.push(week)
                 week = []
             }
-            date.setDate(date.getDate() + 1);
+            monthDate.setDate(monthDate.getDate() + 1);
         }
         if (week.length !== 0) {
             days.push(week)
         }
-        return days;
-    }
-
-    const handleDateFromChange = (e) => {
-        let [year, month] = e.target.value.split('-')
-        year = parseInt(year)
-        month = parseInt(month) - 1
-        setMonth(month)
-        setYear(year)
-
-        const selected = getDaysInMonth(year, month)
-        setDays(selected)
+        setDays(days)
     }
 
     const setCurrentDate = () => {
-        const currentDate = new Date();
-        const currentMonth = currentDate.getMonth();
-        const currentYear = currentDate.getFullYear();
-        setYear(currentYear)
-        setMonth(currentMonth)
-        const selected = getDaysInMonth(currentYear, currentMonth)
-        setDays(selected)
+        const date = new Date();
+        const month = date.getMonth();
+        const year = date.getFullYear();
+        setDate({ month, year })
+    }
+
+    const nextMonth = () => {
+        let month = date.month + 1, year = date.year
+        if (month === 12) {
+            month = 0
+            year += 1
+        }
+        setDate({ month, year })
+    }
+
+    const previousMonth = () => {
+        let month = date.month - 1, year = date.year
+        if (month === -1) {
+            month = 11
+            year -= 1
+        }
+        setDate({ month, year })
     }
 
     const getServices = () => {
@@ -87,7 +91,6 @@ export const Calendar = () => {
             for (let i of res.data) {
                 tmp[i.id] = i.name
             }
-            console.log(tmp)
             setAvailableServices(tmp)
         })
     }
@@ -112,12 +115,15 @@ export const Calendar = () => {
 
     const [readyToFinish, setReadyToFinish] = useState()
     const isJobReadyToFinish = () => {
-        instance.get(`/jobs/ready-to-finish/${selectedJob}`).then(res => {
+        instance.get(`/jobs/ready-to-finish/${selectedJob}`).then(() => {
             setReadyToFinish(true)
         })
     }
 
-    const [finishData, setFinishData] = useState()
+
+    const [doTransport, setDoTransport] = useState(false)
+    const [doAccommodation, setDoAccommodation] = useState(false)
+    const [finishData, setFinishData] = useState({ accommodation: "0", transport: "0" })
     const handleFinishData = (e) => {
         setFinishData({ ...finishData, [e.target.name]: e.target.value })
     }
@@ -169,10 +175,6 @@ export const Calendar = () => {
             return
         }
         setStep(i => i + 1)
-    }
-
-    const handleJobServiceChange = (d, e) => {
-        setJobServices({ ...jobServices, [d]: { ...jobServices[d], [e.target.name]: e.target.value } });
     }
 
     const updateServiceDay = (id) => {
@@ -239,7 +241,12 @@ export const Calendar = () => {
     }
 
     useEffect(() => {
-        setFinishData({})
+        setDaysInMonth()
+        getSavedJobs()
+    }, [date])
+
+    useEffect(() => {
+        setFinishData({ accommodation: "0", transport: "0" })
     }, [readyToFinish])
 
     useEffect(() => {
@@ -259,7 +266,6 @@ export const Calendar = () => {
     useEffect(() => {
         setCurrentDate()
         getServices()
-        getSavedJobs()
     }, [])
 
     return (
@@ -269,7 +275,6 @@ export const Calendar = () => {
                 <div className="absolute bg-slate-800 rounded-sm p-4 space-y-2 top-12 left-0 md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 w-full h-[calc(100%-3rem)] md:h-max md:max-h-[80%] md:min-w-[500px] md:w-max flex flex-col items-ceter overflow-y-auto">
                     {modal ? <>
                         {/* ADMIN ONLY */}
-                        {/* JOB CREATION 2 STEPS */}
                         {jobEdit ? <>
                             {step === 1 ? <>
                                 <div className="flex flex-col">
@@ -291,7 +296,7 @@ export const Calendar = () => {
                                 <hr />
                                 <div className="w-full flex justify-between">
                                     <button className="bg-rose-500 p-1 rounded-sm" onClick={closeAll}>anuluj</button>
-                                    <button className="bg-green-500 p-1 rounded-sm" onClick={nextStep}>dalej</button>
+                                    <button className="bg-emerald-500 p-1 rounded-sm" onClick={nextStep}>dalej</button>
                                 </div>
                             </> : step === 2 ? <>
                                 <p>nazwa: {job.name}</p>
@@ -335,8 +340,8 @@ export const Calendar = () => {
                                     </div>
                                 ))}
                                 <div className="flex justify-between">
-                                    <button className="p-1 rounded-sm bg-blue-500" onClick={() => setStep(i => i - 1)}>wstecz</button>
-                                    <button className="p-1 rounded-sm bg-green-500" onClick={handleJobAdd}>dodaj</button>
+                                    <button className="p-1 rounded-sm bg-cyan-500" onClick={() => setStep(i => i - 1)}>wstecz</button>
+                                    <button className="p-1 rounded-sm bg-emerald-500" onClick={handleJobAdd}>dodaj</button>
                                 </div>
                             </> : null}
                         </> : selectedDay ? <>
@@ -348,7 +353,7 @@ export const Calendar = () => {
                                 <ul className="list-disc list-inside">
                                     {savedJobs[selectedDay].map(j => (
                                         <li className="cursor-pointer hover:underline" onClick={() => { setSelectedDay(null); setSelectedJob(j.id) }}>
-                                            {j.name}({j.id}) - {j.finished ? 'zakonczone' : j.accepted ? 'zaakceptowane' : 'niezaakceptowane'}
+                                            {j.name}({j.id}) - {j.finished ? 'zakończone' : j.accepted ? 'zaakceptowane' : 'niezaakceptowane'}
                                         </li>
                                     ))}
                                 </ul>
@@ -358,7 +363,7 @@ export const Calendar = () => {
                                 {!selectedJobDetail ? <p>ladowanie</p> : <>
                                     <div className="w-full flex justify-between items-center">
                                         <p className="underline">szczegoly zlecenia {selectedJob}</p>
-                                        <button className="p-1 bg-rose-500 rounded-sm" onClick={handleJobDelete}>usun zlecenie</button>
+                                        {!admin ? null : <button className="p-1 bg-rose-500 rounded-sm" onClick={handleJobDelete}>usun zlecenie</button>}
                                     </div>
                                     <p>nazwa: {selectedJobDetail.name}</p>
                                     <p>kontrahent/miejsce: {selectedJobDetail.contractor_place}</p>
@@ -374,7 +379,7 @@ export const Calendar = () => {
                                             ))}
                                         </ul>
                                         <div className="w-full flex justify-end">
-                                            <button className="p-1 rounded-sm bg-green-500" onClick={acceptJob}>zaakceptuj zlecenie</button>
+                                            {coordinator ? <button className="p-1 rounded-sm bg-emerald-500" onClick={acceptJob}>zaakceptuj zlecenie</button> : null}
                                         </div>
                                     </div> : selectedJobDetail.accepted === true && selectedJobDetail.finished === false ? <div className="w-full">
                                         <p className="text-xs">zlecenie zaakceptowane, niezakonczone</p>
@@ -386,23 +391,23 @@ export const Calendar = () => {
                                                         <p className="text-sm">{s.day}({s.id})</p>
                                                         <div className="flex flex-col lg:flex-row lg:space-x-4">
                                                             <p className="text-sm">przewidywana liczna godzin: {s.estimated_time}</p>
-                                                            {!s.real_time && jobServicesAccepted[s.id] ?
-                                                                <div className="flex flex-col">
+                                                            {!s.real_time && jobServicesAccepted[s.id] ? <>
+                                                                {coordinator ? <div className="flex flex-col">
                                                                     <label className="text-xs">faktyczna liczba godzin</label>
                                                                     <input type="number" min="1" name="realTime" value={jobServicesAccepted[s.id].realTime} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
-                                                                </div>
-                                                                : <p className="text-sm">faktyczna liczba godzin: {s.real_time}</p>}
+                                                                </div> : null}
+                                                            </> : <p className="text-sm">faktyczna liczba godzin: {s.real_time}</p>}
                                                         </div>
                                                         <div className="flex flex-col lg:flex-row lg:space-x-4">
                                                             <p className="text-sm">przewidywana liczna osob: {s.estimated_personel}</p>
-                                                            {!s.real_personel && jobServicesAccepted[s.id] ?
-                                                                <div className="flex flex-col">
+                                                            {!s.real_personel && jobServicesAccepted[s.id] ? <>
+                                                                {coordinator ? <div className="flex flex-col">
                                                                     <label className="text-xs">faktyczna liczba osob</label>
                                                                     <input type="number" min="1" name="realPersons" value={jobServicesAccepted[s.id].realPersons} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
-                                                                </div>
-                                                                : <p className="text-sm">faktyczna libcza osob: {s.real_personel}</p>}
+                                                                </div> : null}
+                                                            </> : <p className="text-sm">faktyczna libcza osob: {s.real_personel}</p>}
                                                         </div>
-                                                        {s.real_personel && s.real_time ? null : <button className="p-1 rounded-sm bg-blue-500" onClick={() => updateServiceDay(s.id)}>zapisz</button>}
+                                                        {(s.real_personel && s.real_time) || !coordinator ? null : <button className="p-1 rounded-sm bg-cyan-500" onClick={() => updateServiceDay(s.id)}>zapisz</button>}
                                                     </div>
                                                     <hr />
                                                 </>
@@ -410,20 +415,28 @@ export const Calendar = () => {
                                         </div>
                                         {readyToFinish === true ?
                                             <div className="flex flex-col w-full pt-2 space-y-1">
-                                                <div className="flex flex-col">
+                                                <div className="space-x-1">
+                                                    <input id="do-transport" type="checkbox" onChange={() => setDoTransport(i => !i)} />
+                                                    <label htmlFor="do-transport" className="underline">wprowadz koszty transportu</label>
+                                                </div>
+                                                {doTransport === true ? <div className="flex flex-col">
                                                     <label className="text-xs">koszty transportu</label>
-                                                    <input type="number" min="0" name="transport" value={finishData.transport || ''} onChange={handleFinishData} />
+                                                    <input type="number" min="0" name="transport" value={finishData.transport} onChange={handleFinishData} />
+                                                </div> : null}
+                                                <div className="space-x-1">
+                                                    <input id="do-accommodation" type="checkbox" onChange={() => setDoAccommodation(i => !i)} />
+                                                    <label htmlFor="do-accommodation" className="underline">wprowadz koszty zakwaterowania</label>
                                                 </div>
-                                                <div className="flex flex-col">
+                                                {doAccommodation === true ? <div className="flex flex-col">
                                                     <label className="text-xs">koszty zakwaterowania</label>
-                                                    <input type="number" min="0" name="accommodation" value={finishData.accommodation || ''} onChange={handleFinishData} />
-                                                </div>
-                                                <button className="p-1 rounded-sm bg-green-500" onClick={finishJob}>zakoncz zlecenie</button>
+                                                    <input type="number" min="0" name="accommodation" value={finishData.accommodation} onChange={handleFinishData} />
+                                                </div> : null}
+                                                <button className="p-1 rounded-sm bg-emerald-500" onClick={finishJob}>zakoncz zlecenie</button>
                                                 <button className="p-1 rounded-sm bg-rose-500" onClick={() => setReadyToFinish(false)}>anuluj</button>
                                             </div> :
                                             <div className="w-full flex justify-between pt-2">
                                                 <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
-                                                <button className="p-1 rounded-sm bg-green-500" onClick={isJobReadyToFinish}>wprowadz dane koncowe</button>
+                                                {coordinator ? <button className="p-1 rounded-sm bg-emerald-500" onClick={isJobReadyToFinish}>wprowadz dane koncowe</button> : null}
                                             </div>
                                         }
                                     </div> : selectedJobDetail.accepted === true && selectedJobDetail.finished === true ?
@@ -456,12 +469,13 @@ export const Calendar = () => {
             </>
             }
             <div className="space-y-4 h-full overflow-y-auto">
-                <div className="w-full flex justify-between py-1">
-                    <input type="month" onChange={handleDateFromChange} />
-                    {admin ? <button className="p-1 bg-emerald-500 rounded-sm" onClick={() => { setModal(i => !i); setJobEdit(true) }}>dodaj zlecenie</button> : null}
-                </div>
+                {admin ? <button className="p-1 bg-emerald-500 rounded-sm my-1" onClick={() => { setModal(i => !i); setJobEdit(true) }}>dodaj zlecenie</button> : null}
                 {days.length === 0 ? null : <>
-                    <p className="text-center text-2xl">{monthNames[month]} {year}</p>
+                    <div className="w-full flex justify-between mt-4">
+                        <button className="underline" onClick={previousMonth}>poprzedni</button>
+                        <p className="text-center text-2xl">{date.month ? monthNames[date.month] : '-'} {date.year}</p>
+                        <button className="underline" onClick={nextMonth}>następny</button>
+                    </div>
                     <table className="hidden xl:table table-fixed w-full border-collapse border border-cyan-600">
                         <thead>
                             <tr className="bg-cyan-500">
@@ -485,7 +499,7 @@ export const Calendar = () => {
                                                         </div>
                                                         {!savedJobs[d] ? null : <ul className="w-full space-y-1">
                                                             {savedJobs[d].map(k => (
-                                                                <li className={`text-xs p-1 rounded text-center ${k.accepted !== true ? 'bg-rose-500' : 'bg-emerald-500'}`}>{k.name}({k.id})</li>
+                                                                <li className={`text-xs p-1 rounded text-center ${k.finished === true ? 'bg-emerald-500' :k.accepted !== true ? 'bg-rose-500' : 'bg-amber-500'}`}>{k.name}({k.id})</li>
                                                             ))}
                                                         </ul>
                                                         }

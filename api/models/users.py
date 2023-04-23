@@ -3,8 +3,9 @@ from pydantic import BaseModel
 
 class UserIn(BaseModel):
     username: str
-    password0: str
-    password1: str
+    password: str
+    admin: bool
+    coordinator: bool
 
 
 class UserLogin(BaseModel):
