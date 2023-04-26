@@ -1,6 +1,7 @@
 import { Common } from './layouts/Common'
-import { DefaultLayout } from './layouts/DefaultLayout'
 import { Calendar } from './pages/Calendar'
+import { DefaultLayout } from './layouts/DefaultLayout'
+import { FinishedJobs } from './pages/FinishedJobs'
 import { Home } from './pages/Home'
 import { Login } from './pages/Login'
 import { Profile } from './pages/Profile'
@@ -38,6 +39,7 @@ export default function App() {
             <Route path='/profile' element={<Profile />} />
             <Route path='/calendar' element={<Calendar />} />
             <Route path='/types-of-services' element={<Services />} />
+            <Route path='/finished-jobs' element={<FinishedJobs />} />
           </Route>
           <Route path='/login' element={<Login />} />
           <Route path='*' element={<Navigate to={'/'} />} />

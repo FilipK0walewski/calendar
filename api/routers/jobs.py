@@ -26,6 +26,20 @@ async def get_jobs():
     return days
 
 
+@router.get('/finished')
+async def get_finished_jobs():
+    data = []
+    jobs = await db.fetch_all('select id, name, contractor_place, date_from, date_to, transport_cost, accommodation_cost from jobs where finished = true')
+    for job in jobs:
+        job = dict(job._mapping)
+        services = await db.fetch_all('select b.name, b.price, a.real_time from services a join types_of_services b on a.service_type_id = b.id and a.job_id = :id', {'id': job['id']})
+        services_cost_sum = sum([i._mapping['price'] * i._mapping['real_time'] for i in services])
+        job['all_costs'] = services_cost_sum + job['accommodation_cost'] + job['transport_cost']
+        job['services'] = services
+        data.append(job)
+    return data
+
+
 @router.get('/{job_id}')
 async def get_job(job_id: int):
     job = await db.fetch_one('select * from jobs where id = :id', {'id': job_id})
