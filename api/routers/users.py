@@ -1,4 +1,5 @@
 import base64
+import jwt
 import os
 import uuid
 
@@ -6,7 +7,7 @@ from fastapi import APIRouter, Depends, Header, HTTPException, Request, UploadFi
 
 from libs.common import check_password, get_hashed_password, generate_jwt_token, verify_token
 from libs.psql import db
-from models.users import UserIn, UserLogin, UserOut
+from models.users import Passwords, UserIn, UserLogin, UserOut
 
 router = APIRouter(
     tags=["users"],
@@ -46,8 +47,26 @@ async def create_user(user: UserIn):
 async def login(user: UserLogin):
     data = await db.fetch_one('select id, password from users where username = :u', {'u': user.username})
     if data is None:
-        raise HTTPException(status_code=403, detail='Invalid username or password.')
+        raise HTTPException(status_code=403, detail='Niepoprawna nazwa użytkownika lub hasło.')
     if check_password(user.password, data._mapping['password']) is False:
-        raise HTTPException(status_code=403, detail='Invalid username or password.')
+        raise HTTPException(status_code=403, detail='Niepoprawna nazwa użytkownika lub hasło.')
     token = generate_jwt_token(data._mapping['id'])
     return {'token': token, 'username': user.username}
+
+
+@router.post('/set-password')
+async def set_password(data: Passwords, user_id: int = Depends(verify_token)):
+    res = await db.fetch_one('select password from users where id = :id', {'id': user_id})
+    print(res)
+    if res is None:
+        raise HTTPException(status_code=401, detail='Brak dostępu')
+    if check_password(data.old, res._mapping['password']) is False:
+        raise HTTPException(status_code=403, detail='Niepoprawne hasło.')    
+    if data.new != data.confirm:
+        raise HTTPException(status_code=400, detail='Hasła nie są takie same.')
+    if data.old == data.new:
+        raise HTTPException(status_code=400, detail='Nowe i stare hasła są takie same.')
+
+    hashed_password = get_hashed_password(data.new)
+    await db.execute('update users set password = :password where id = :id', {'id': user_id, 'password': hashed_password})
+    return {'message': 'Hasło zmienione'}

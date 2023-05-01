@@ -27,7 +27,7 @@ export const FinishedJobs = () => {
     return (
         <>
             <p className="mb-2">Lista zakończonych zleceń</p>
-            <table className="hidden lg:table w-full table-fixed text-sm">
+            <table className="hidden lg:table w-full table-auto text-sm">
                 <thead>
                     <tr>
                         <th className="border border-slate-400">nazwa</th>
@@ -38,39 +38,40 @@ export const FinishedJobs = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {finishedJobs.map(job => (
-                        <tr key={job.id}>
-                            <td className="border border-slate-600 p-2">{job.name}</td>
-                            <td className="border border-slate-600 p-2">{job.contractor_place}</td>
-                            <td className="border border-slate-600 p-2">{job.date_from}</td>
-                            <td className="border border-slate-600 p-2">{job.date_to}</td>
-                            <td className="border border-slate-600 p-2"><ul>
-                                {job.services.map((service, index) => (
-                                    <li key={index}>{service.name}({service.real_time}h): {service.real_time * service.price} PLN</li>
+                    {finishedJobs.map((job, i) => (
+                        <tr key={i}>
+                            <td className="border border-slate-600 px-1">{job.name}</td>
+                            <td className="border border-slate-600 px-1">{job.contractor_place}</td>
+                            <td className="border border-slate-600 px-1">{job.date_from.split('-').reverse().join('.')}</td>
+                            <td className="border border-slate-600 px-1">{job.date_from.split('-').reverse().join('.')}</td>
+                            <td className="border border-slate-600 px-1"><ul>
+                                {job.services.map((service, j) => (
+                                    // Spawanie - 10 os. x 30h x 20 zł = 6000 zł
+                                    <li key={j}>{service.name} - {service.real_personel} os. * {service.real_time}h * {service.price} zł = {service.real_personel * service.real_time * service.price} zł</li>
                                 ))}
                                 {job.transport_cost ? <li>transport: {job.transport_cost} PLN</li> : null}
                                 {job.accommodation_cost ? <li>zakwaterowanie: {job.accommodation_cost} PLN</li> : null}
-                                <li>suma: {job.all_costs} PLN</li>
+                                <li className="font-bold text-cyan-400">suma: {job.all_costs} PLN</li>
                             </ul></td>
                         </tr>
                     ))}
                 </tbody>
             </table>
             <div className="lg:hidden space-y-4 text-sm">
-                {finishedJobs.map(job => (<>
-                    <ul key={job.id}>
+                {finishedJobs.map((job, i) => (<>
+                    <ul key={i}>
                         <li>nazwa: {job.name}</li>
                         <li>kontrahent: {job.contractor_place}</li>
                         <li>od {job.date_from} do {job.date_to}</li>
                         <li className="py-1">
                             <span className="underline">koszty:</span>
                             <ul className="list-disc list-inside">
-                                {job.services.map((service, index) => (
-                                    <li key={job.id + index}>{service.name}({service.real_time}h): {service.real_time * service.price} PLN</li>
+                                {job.services.map((service, j) => (
+                                    <li key={j}>{service.name}({service.real_time}h): {service.real_time * service.price} PLN</li>
                                 ))}
                             </ul>
                         </li>
-                        <li>suma kosztów: {job.all_costs} PLN</li>
+                        <li className="font-bold text-cyan-400">suma kosztów: {job.all_costs} PLN</li>
                     </ul>
                     <hr />
                 </>))}

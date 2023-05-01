@@ -32,7 +32,7 @@ async def get_finished_jobs():
     jobs = await db.fetch_all('select id, name, contractor_place, date_from, date_to, transport_cost, accommodation_cost from jobs where finished = true')
     for job in jobs:
         job = dict(job._mapping)
-        services = await db.fetch_all('select b.name, b.price, a.real_time from services a join types_of_services b on a.service_type_id = b.id and a.job_id = :id', {'id': job['id']})
+        services = await db.fetch_all('select name, price, real_time, real_personel from services where job_id = :id', {'id': job['id']})
         services_cost_sum = sum([i._mapping['price'] * i._mapping['real_time'] for i in services])
         job['all_costs'] = services_cost_sum + job['accommodation_cost'] + job['transport_cost']
         job['services'] = services
@@ -78,8 +78,11 @@ async def add_job(job: Job):
 
     job_id = new_job._mapping['id']
     for s in job.services:
-        service_values = {'jid': job_id, 'sid': s.serviceType, 'day': s.day, 'est_time': s.estTime, 'est_persons': s.estPersons}
-        await db.execute('insert into services (job_id, service_type_id, day, estimated_time, estimated_personel) values(:jid, :sid, :day, :est_time, :est_persons)', service_values)
+        sd = await db.fetch_one('select price, name from types_of_services where id = :id', {'id': s.serviceType})
+        name = sd._mapping['name']
+        price = sd._mapping['price']
+        service_values = {'jid': job_id, 'sid': s.serviceType, 'day': s.day, 'est_time': s.estTime, 'est_persons': s.estPersons, 'name': name, 'price': price}
+        await db.execute('insert into services (job_id, service_type_id, day, estimated_time, estimated_personel, name, price) values(:jid, :sid, :day, :est_time, :est_persons, :name, :price)', service_values)
 
     return {'message': 'Zlecenie dodane!'}
 
@@ -92,11 +95,11 @@ class JobId(BaseModel):
 async def accept_job(job_id: JobId):
     res = await db.fetch_one('select accepted, finished from jobs where id = :id', {'id': job_id.number})
     if res._mapping['accepted'] is True and res._mapping['finished'] is True:
-        raise HTTPException(status_code=403, detail={'message': 'Zlecenie zostalo zaakceptowane i zakonczone.'})
+        raise HTTPException(status_code=403, detail='Zlecenie zostalo zaakceptowane i zakonczone.')
     elif res._mapping['finished'] is True:
-        raise HTTPException(status_code=403, detail={'message': 'Zlecenie zakonczone.'})
+        raise HTTPException(status_code=403, detail='Zlecenie zakonczone.')
     elif res._mapping['accepted'] is True:
-        raise HTTPException(status_code=403, detail={'message': 'Zlecenie jest juz zaakecptowane.'})
+        raise HTTPException(status_code=403, detail='Zlecenie jest juz zaakecptowane.')
 
     await db.execute('update jobs set accepted = true where id = :id', {'id': job_id.number})
     return {'message': 'Zaakceptowano zlecenie.'}
@@ -112,15 +115,15 @@ class JobFinishData(BaseModel):
 async def accept_job(data: JobFinishData):
     res = await db.fetch_one('select accepted, finished from jobs where id = :id', {'id': data.job_id})
     if res._mapping['accepted'] is True and res._mapping['finished'] is True:
-        raise HTTPException(status_code=403, detail={'message': 'Zlecenie zostalo juz zaakceptowane i zakonczone.'})
+        raise HTTPException(status_code=403, detail='Zlecenie zostalo juz zaakceptowane i zakonczone.')
     elif res._mapping['finished'] is True:
-        raise HTTPException(status_code=403, detail={'message': 'Zlecenie juz zakonczone.'})
+        raise HTTPException(status_code=403, detail='Zlecenie juz zakonczone.')
     elif res._mapping['accepted'] is False:
-        raise HTTPException(status_code=403, detail={'message': 'Zlecenie nie zostalo jeszcze zaakceptowane.'})
+        raise HTTPException(status_code=403, detail='Zlecenie nie zostalo jeszcze zaakceptowane.')
 
     res = await db.fetch_one('select 1 from services where job_id = :id and real_time is null and real_personel is null', {'id': data.job_id})
     if res is not None:
-        raise HTTPException(status_code=403, detail={'message': 'Nie mozna zakonczyc.'})
+        raise HTTPException(status_code=403, detail='Nie mozna zakonczyc.')
 
     values = {'transport': data.transport, 'accommodation': data.accommodation, 'id': data.job_id}
     await db.execute('update jobs set finished = true, transport_cost = :transport, accommodation_cost = :accommodation where id = :id', values)
@@ -139,11 +142,11 @@ class Day(BaseModel):
 async def save_day(day: Day):
     res = await db.fetch_one('select day from services where id = :sid and job_id = :jid', {'sid': day.service_id, 'jid': day.job_id})
     if res is None:
-        raise HTTPException(status_code=404, detail={'message': f'Brak servisu od id {day.service_id} dla zlecenia {day.job_id}.'})
+        raise HTTPException(status_code=404, detail=f'Brak servisu od id {day.service_id} dla zlecenia {day.job_id}.')
 
     current_date = date.today()
     if res._mapping['day'] > current_date:
-        raise HTTPException(status_code=403, detail={'message': f'Mozna uzupelnic od dnia {current_date}.'})
+        raise HTTPException(status_code=403, detail=f'Mozna uzupelnic od dnia {current_date}.')
 
     await db.execute('update services set real_time = :time, real_personel = :personel where id = :sid', {'time': day.time, 'personel': day.persons, 'sid': day.service_id})
     return {'message': 'Dzien zapisany'}
@@ -153,10 +156,10 @@ async def save_day(day: Day):
 async def check_if_job_is_ready_to_finish(job_id: int):
     res = await db.fetch_one('select accepted, finished from jobs where id = :id', {'id': job_id}) 
     if not (res._mapping['accepted'] is True and res._mapping['finished'] is False):
-        raise HTTPException(status_code=403, detail={'message': 'Zlecenie nie moze zostac jeszcze zakonczone'})
+        raise HTTPException(status_code=403, detail='Zlecenie nie moze zostac jeszcze zakonczone')
 
     res = await db.fetch_one('select 1 from services where job_id = :id and real_time is null and real_personel is null', {'id': job_id})
     if res is not None:
-        raise HTTPException(status_code=403, detail={'message': 'Zlecenie nie moze zostac jeszcze zakonczone, najpierw uwupelnij dane serwisow.'})
+        raise HTTPException(status_code=403, detail='Zlecenie nie moze zostac jeszcze zakonczone, najpierw uwupelnij dane serwisow.')
     
     return {'message': 'Zlecenie gotowe do zakonczenia, uzupelnij dodatkowe dane.'}

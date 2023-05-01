@@ -29,6 +29,14 @@ export const Calendar = () => {
     const [selectedJob, setSelectedJob] = useState()
     const [selectedJobDetail, setSelectedJobDetail] = useState()
 
+    const dayOfWeek = (d) => {
+        const date = new Date(d)
+        let n = date.getDay()
+        if (n === 0) n = 6
+        else n -= 1
+        return dayNames[n].toUpperCase()
+    }
+
     const getDateString = (date) => {
         const yyyy = date.getFullYear().toString().padStart(4, '0');
         const mm = (date.getMonth() + 1).toString().padStart(2, '0');
@@ -347,118 +355,212 @@ export const Calendar = () => {
                         </> : selectedDay ? <>
                             {selectedDay in savedJobs ? <>
                                 <div className="flex w-full justify-between items-center">
-                                    <p>zlecenia na dzien {selectedDay}:</p>
+                                    <p>{dayOfWeek(selectedDay)} {selectedDay.split('-').reverse().join('.')}r.</p>
                                     <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
                                 </div>
+                                <p>zlecenia:</p>
                                 <ul className="list-disc list-inside">
                                     {savedJobs[selectedDay].map(j => (
                                         <li className="cursor-pointer hover:underline" onClick={() => { setSelectedDay(null); setSelectedJob(j.id) }}>
-                                            {j.name}({j.id}) - {j.finished ? 'zakończone' : j.accepted ? 'zaakceptowane' : 'niezaakceptowane'}
+                                            {j.name} - {j.finished ? 'zakończone' : j.accepted ? 'zaakceptowane' : 'niezaakceptowane'}
                                         </li>
                                     ))}
                                 </ul>
-                            </> : <div className="w-full flex items-center justify-between"><p>brak zlencen w dniu {selectedDay}</p><button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button></div>}
+                            </> : <>
+                                <div className="w-full flex items-center justify-between">
+                                    <p>{dayOfWeek(selectedDay)} {selectedDay.split('-').reverse().join('.')}r.</p>
+                                    <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
+                                </div>
+                                <p>brak zleceń</p>
+                            </>}
                         </> : selectedJob ?
-                            <div className="flex flex-col space-y-1 items-start min-w-96">
+                            <div className="flex flex-col items-start min-w-96">
                                 {!selectedJobDetail ? <p>ladowanie</p> : <>
-                                    <div className="w-full flex justify-between items-center">
-                                        <p className="underline">szczegoly zlecenia {selectedJob}</p>
-                                        {!admin ? null : <button className="p-1 bg-rose-500 rounded-sm" onClick={handleJobDelete}>usun zlecenie</button>}
+                                    <div className="w-full">
+                                        <div className="w-full flex justify-between items-center">
+                                            <p className="font-bold">Zlecenie nr. {selectedJob}</p>
+                                            {!admin ? null : <button className="p-1 bg-rose-500 rounded-sm" onClick={handleJobDelete}>usuń</button>}
+                                        </div>
+                                        <p>nazwa: {selectedJobDetail.name}</p>
+                                        <p>kontrahent/miejsce: {selectedJobDetail.contractor_place}</p>
                                     </div>
-                                    <p>nazwa: {selectedJobDetail.name}</p>
-                                    <p>kontrahent/miejsce: {selectedJobDetail.contractor_place}</p>
-                                    <hr className="pb-4" />
 
-                                    {selectedJobDetail.accepted === false ? <div className="w-full">
-                                        <p className="text-sm">zlecenie nie zostalo jeszcze zaakceptowane</p>
-                                        <hr />
-                                        <p className="text-sm">lista uslug:</p>
-                                        <ul className="list-disc list-inside py-1">
-                                            {selectedJobDetail.services.map(s => (
-                                                <li className="text-xs" key={s.id}>{s.day}({s.id}) - {availableServices[s.service_type_id]} - {s.estimated_time}h - {s.estimated_personel} osob</li>
-                                            ))}
-                                        </ul>
-                                        <div className="w-full flex justify-end">
-                                            {coordinator ? <button className="p-1 rounded-sm bg-emerald-500" onClick={acceptJob}>zaakceptuj zlecenie</button> : null}
-                                        </div>
-                                    </div> : selectedJobDetail.accepted === true && selectedJobDetail.finished === false ? <div className="w-full">
-                                        <p className="text-xs">zlecenie zaakceptowane, niezakonczone</p>
-                                        <hr />
-                                        <div className="space-y-1 w-full">
-                                            {selectedJobDetail.services.map(s => (
-                                                <>
-                                                    <div className="lg:space-x-4 flex flex-col lg:flex-row p-1 bg-slate-700 w-full" key={s.day}>
-                                                        <p className="text-sm">{s.day}({s.id})</p>
-                                                        <div className="flex flex-col lg:flex-row lg:space-x-4">
-                                                            <p className="text-sm">przewidywana liczna godzin: {s.estimated_time}</p>
-                                                            {!s.real_time && jobServicesAccepted[s.id] ? <>
-                                                                {coordinator ? <div className="flex flex-col">
-                                                                    <label className="text-xs">faktyczna liczba godzin</label>
-                                                                    <input type="number" min="1" name="realTime" value={jobServicesAccepted[s.id].realTime} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
-                                                                </div> : null}
-                                                            </> : <p className="text-sm">faktyczna liczba godzin: {s.real_time}</p>}
-                                                        </div>
-                                                        <div className="flex flex-col lg:flex-row lg:space-x-4">
-                                                            <p className="text-sm">przewidywana liczna osob: {s.estimated_personel}</p>
-                                                            {!s.real_personel && jobServicesAccepted[s.id] ? <>
-                                                                {coordinator ? <div className="flex flex-col">
-                                                                    <label className="text-xs">faktyczna liczba osob</label>
-                                                                    <input type="number" min="1" name="realPersons" value={jobServicesAccepted[s.id].realPersons} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
-                                                                </div> : null}
-                                                            </> : <p className="text-sm">faktyczna libcza osob: {s.real_personel}</p>}
-                                                        </div>
-                                                        {(s.real_personel && s.real_time) || !coordinator ? null : <button className="p-1 rounded-sm bg-cyan-500" onClick={() => updateServiceDay(s.id)}>zapisz</button>}
-                                                    </div>
-                                                    <hr />
-                                                </>
-                                            ))}
-                                        </div>
-                                        {readyToFinish === true ?
-                                            <div className="flex flex-col w-full pt-2 space-y-1">
-                                                <div className="space-x-1">
-                                                    <input id="do-transport" type="checkbox" onChange={() => setDoTransport(i => !i)} />
-                                                    <label htmlFor="do-transport" className="underline">wprowadz koszty transportu</label>
-                                                </div>
-                                                {doTransport === true ? <div className="flex flex-col">
-                                                    <label className="text-xs">koszty transportu</label>
-                                                    <input type="number" min="0" name="transport" value={finishData.transport} onChange={handleFinishData} />
-                                                </div> : null}
-                                                <div className="space-x-1">
-                                                    <input id="do-accommodation" type="checkbox" onChange={() => setDoAccommodation(i => !i)} />
-                                                    <label htmlFor="do-accommodation" className="underline">wprowadz koszty zakwaterowania</label>
-                                                </div>
-                                                {doAccommodation === true ? <div className="flex flex-col">
-                                                    <label className="text-xs">koszty zakwaterowania</label>
-                                                    <input type="number" min="0" name="accommodation" value={finishData.accommodation} onChange={handleFinishData} />
-                                                </div> : null}
-                                                <button className="p-1 rounded-sm bg-emerald-500" onClick={finishJob}>zakoncz zlecenie</button>
-                                                <button className="p-1 rounded-sm bg-rose-500" onClick={() => setReadyToFinish(false)}>anuluj</button>
-                                            </div> :
-                                            <div className="w-full flex justify-between pt-2">
-                                                <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
-                                                {coordinator ? <button className="p-1 rounded-sm bg-emerald-500" onClick={isJobReadyToFinish}>wprowadz dane koncowe</button> : null}
+                                    <div className="w-full">
+                                        {selectedJobDetail.accepted === false ? <div className="w-full space-y-2">
+                                            <p>status: niezaakceptowane</p>
+                                            <div className="w-full overflow-x-auto">
+                                                <table className="w-full text-xs border-slate-600 border">
+                                                    <thead>
+                                                        <tr className="bg-slate-600 font-normal">
+                                                            <th className="px-4">data</th>
+                                                            <th className="px-4">usługa</th>
+                                                            <th className="px-4">przewidywany czas</th>
+                                                            <th className="px-4">przewidywana liczba osób</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {selectedJobDetail.services.map(s => (
+                                                            <tr key={s.id} className="text-center border-b border-slate-500">
+                                                                <td>{s.day.split('-').reverse().join('.')}r.</td>
+                                                                <td>{availableServices[s.service_type_id]}</td>
+                                                                <td>{s.estimated_time}</td>
+                                                                <td>{s.estimated_personel}</td>
+                                                            </tr>
+                                                        ))}
+                                                    </tbody>
+                                                </table>
                                             </div>
-                                        }
-                                    </div> : selectedJobDetail.accepted === true && selectedJobDetail.finished === true ?
-                                        <div>
-                                            <p className="text-sm">zlecenie zakonczone</p>
-                                            <hr />
-                                            <p className="text-sm">dane:</p>
-                                            <ul className="list-disc list-inside">
-                                                <li className="text-xs">start zlecenia: {selectedJobDetail.date_from}</li>
-                                                <li className="text-xs">zakonczenie zlecenia: {selectedJobDetail.date_to}</li>
-                                                <li className="text-xs">koszt transportu: {selectedJobDetail.transport_cost} PLN</li>
-                                                <li className="text-xs">koszt zakwaterowania: {selectedJobDetail.accommodation_cost} PLN</li>
-                                            </ul>
-                                            <p className="text-sm mt-2">uslugi:</p>
-                                            <ul className="list-disc list-inside">
+
+                                            <div className="w-full flex justify-between">
+                                                <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
+                                                {coordinator ? <button className="p-1 rounded-sm bg-emerald-500" onClick={acceptJob}>zaakceptuj zlecenie</button> : null}
+                                            </div>
+                                        </div> : selectedJobDetail.accepted === true && selectedJobDetail.finished === false ? <div className="w-full">
+                                            <p>status: zaakceptowane, niezakonczone</p>
+
+                                            <table className="w-full text-xs hidden lg:table">
+                                                <thead>
+                                                    <tr className="bg-slate-600">
+                                                        <th className="px-4">data</th>
+                                                        <th className="px-4">usługa</th>
+                                                        <th className="px-4">przewidywana liczba godzin</th>
+                                                        <th className="px-4">faktyczna liczba godzin</th>
+                                                        <th className="px-4">przewidywana liczba osób</th>
+                                                        <th className="px-4">faktyczna liczba osób</th>
+                                                        <th className="px-4">akcja</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {selectedJobDetail.services.map((s, sIndex) => (
+                                                        <tr key={sIndex} className="text-center">
+                                                            <td>{s.day.split('-').reverse().join('.')}r.</td>
+                                                            <td>{availableServices[s.service_type_id]}</td>
+                                                            <td>{s.estimated_time}</td>
+                                                            {!s.real_time && jobServicesAccepted[s.id] ? <>
+                                                                {coordinator ?
+                                                                    <input type="number" min="1" name="realTime" value={jobServicesAccepted[s.id].realTime} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
+                                                                    : '-'}
+                                                            </> : <span>{s.real_time}</span>}
+                                                            <th>{s.estimated_personel}</th>
+                                                            {!s.real_personel && jobServicesAccepted[s.id] ? <>
+                                                                {coordinator ?
+                                                                    <input type="number" min="1" name="realPersons" value={jobServicesAccepted[s.id].realPersons} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
+                                                                    : '-'}
+                                                            </> : <span>{s.real_personel}</span>}
+                                                            <th>{(s.real_personel && s.real_time) || !coordinator ? '-' :
+                                                                <button className="p-1 rounded-sm bg-cyan-500" onClick={() => updateServiceDay(s.id)}>zapisz</button>}
+                                                            </th>
+                                                        </tr>
+                                                    ))}
+                                                </tbody>
+                                            </table>
+
+                                            <div className="space-y-1 w-full lg:hidden">
                                                 {selectedJobDetail.services.map(s => (
-                                                    <li className="text-xs" key={s.id}>{s.day}({s.id}) - {s.service_name} - {s.real_time}h - {s.real_personel} osob</li>
+                                                    <>
+                                                        <div className="flex flex-col p-1 bg-slate-700 w-full rounded-sm" key={s.day}>
+                                                            <p className="text-sm">data: {s.day.split('-').reverse().join('.')}r.</p>
+                                                            <p className="text-sm">przewidywana liczna godzin: {s.estimated_time}</p>
+                                                            <div className="flex flex-col">
+                                                                {!s.real_time && jobServicesAccepted[s.id] ? <>
+                                                                    {coordinator ? <div className="flex flex-col py-2">
+                                                                        <label className="text-xs">faktyczna liczba godzin</label>
+                                                                        <input type="number" min="1" name="realTime" value={jobServicesAccepted[s.id].realTime} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
+                                                                    </div> : null}
+                                                                </> : <p className="text-sm">faktyczna liczba godzin: {s.real_time}</p>}
+                                                            </div>
+                                                            <p className="text-sm">przewidywana liczna osob: {s.estimated_personel}</p>
+                                                            <div className="flex flex-col">
+                                                                {!s.real_personel && jobServicesAccepted[s.id] ? <>
+                                                                    {coordinator ? <div className="flex flex-col py-2">
+                                                                        <label className="text-xs">faktyczna liczba osob</label>
+                                                                        <input type="number" min="1" name="realPersons" value={jobServicesAccepted[s.id].realPersons} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
+                                                                    </div> : null}
+                                                                </> : <p className="text-sm">faktyczna libcza osob: {s.real_personel}</p>}
+                                                            </div>
+                                                            {(s.real_personel && s.real_time) || !coordinator ? null : <button className="p-1 rounded-sm bg-cyan-500" onClick={() => updateServiceDay(s.id)}>zapisz</button>}
+                                                        </div>
+                                                    </>
                                                 ))}
-                                            </ul>
+                                            </div>
+                                            {readyToFinish === true ?
+                                                <div className="flex flex-col w-full pt-2 space-y-1">
+                                                    <div className="space-x-1">
+                                                        <input id="do-transport" type="checkbox" onChange={() => setDoTransport(i => !i)} />
+                                                        <label htmlFor="do-transport" className="underline">wprowadz koszty transportu</label>
+                                                    </div>
+                                                    {doTransport === true ? <div className="flex flex-col">
+                                                        <label className="text-xs">koszty transportu</label>
+                                                        <input className="max-w-[250px]" type="number" min="0" name="transport" value={finishData.transport} onChange={handleFinishData} />
+                                                    </div> : null}
+                                                    <div className="space-x-1">
+                                                        <input id="do-accommodation" type="checkbox" onChange={() => setDoAccommodation(i => !i)} />
+                                                        <label htmlFor="do-accommodation" className="underline">wprowadz koszty zakwaterowania</label>
+                                                    </div>
+                                                    {doAccommodation === true ? <div className="flex flex-col">
+                                                        <label className="text-xs">koszty zakwaterowania</label>
+                                                        <input className="max-w-[250px]" type="number" min="0" name="accommodation" value={finishData.accommodation} onChange={handleFinishData} />
+                                                    </div> : null}
+                                                    <div className="w-full flex justify-between">
+                                                        <button className="p-1 rounded-sm bg-rose-500" onClick={() => setReadyToFinish(false)}>anuluj</button>
+                                                        <button className="p-1 rounded-sm bg-emerald-500" onClick={finishJob}>zakoncz zlecenie</button>
+                                                    </div>
+                                                </div> :
+                                                <div className="w-full flex justify-between pt-2">
+                                                    <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
+                                                    {coordinator ? <button className="p-1 rounded-sm bg-emerald-500" onClick={isJobReadyToFinish}>wprowadz dane koncowe</button> : null}
+                                                </div>
+                                            }
+                                        </div> : selectedJobDetail.accepted === true && selectedJobDetail.finished === true ? <div className="space-y-2">
+                                            <p>status: zakończone</p>
+                                            <div className="w-full overflow-x-auto">
+                                                <table className="w-full text-xs border-slate-600 border">
+                                                    <thead>
+                                                        <tr className="bg-slate-600 font-normal">
+                                                            <th className="px-4">start</th>
+                                                            <th className="px-4">koniec</th>
+                                                            <th className="px-4">koszt transportu</th>
+                                                            <th className="px-4">koszt zakwaterowania</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        <tr className="text-center border-b border-slate-500">
+                                                            <td>{selectedJobDetail.date_from.split('-').reverse().join('.')}r.</td>
+                                                            <td>{selectedJobDetail.date_to.split('-').reverse().join('.')}r.</td>
+                                                            <td>{selectedJobDetail.transport_cost} zł</td>
+                                                            <td>{selectedJobDetail.accommodation_cost} zł</td>
+                                                        </tr>
+                                                    </tbody>
+                                                </table>
+                                            </div>
+
+                                            <div className="w-full overflow-x-auto">
+                                                <table className="w-full text-xs border-slate-600 border">
+                                                    <thead>
+                                                        <tr className="bg-slate-600 font-normal">
+                                                            <th className="px-4">data</th>
+                                                            <th className="px-4">usługa</th>
+                                                            <th className="px-4">liczba godzin</th>
+                                                            <th className="px-4">liczba osób</th>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody>
+                                                        {selectedJobDetail.services.map(s => (
+                                                            <tr className="text-center border-b border-slate-500">
+                                                                <td>{s.day.split('-').reverse().join('.')}r.</td>
+                                                                <td>{s.service_name}</td>
+                                                                <td>{s.real_time}</td>
+                                                                <td>{s.real_personel}</td>
+                                                            </tr>
+                                                        ))}
+
+                                                    </tbody>
+                                                </table>
+                                            </div>
                                             <button className="mt-4 rounded-sm p-1 text-sm bg-rose-500" onClick={closeAll}>zamknij</button>
                                         </div> : null
-                                    }
+                                        }
+                                    </div>
                                 </>
                                 }
                             </div> : null
@@ -499,7 +601,7 @@ export const Calendar = () => {
                                                         </div>
                                                         {!savedJobs[d] ? null : <ul className="w-full space-y-1">
                                                             {savedJobs[d].map(k => (
-                                                                <li className={`text-xs p-1 rounded text-center ${k.finished === true ? 'bg-emerald-500' :k.accepted !== true ? 'bg-rose-500' : 'bg-amber-500'}`}>{k.name}({k.id})</li>
+                                                                <li className={`text-xs p-1 rounded text-center ${k.finished === true ? 'bg-emerald-500' : k.accepted !== true ? 'bg-rose-500' : 'bg-amber-500'}`}>{k.name}({k.id})</li>
                                                             ))}
                                                         </ul>
                                                         }

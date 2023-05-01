@@ -1,6 +1,12 @@
 from pydantic import BaseModel
 
 
+class Passwords(BaseModel):
+    old: str
+    new: str
+    confirm: str
+
+
 class UserIn(BaseModel):
     username: str
     password: str

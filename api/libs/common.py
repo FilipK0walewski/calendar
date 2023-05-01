@@ -32,7 +32,6 @@ async def get_user_id(token: str | None = Header(default=None)):
         user_id = payload['user_id']
     except jwt.exceptions.DecodeError:
         pass
-
     return user_id
 
 

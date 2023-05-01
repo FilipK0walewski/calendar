@@ -21,8 +21,9 @@ instance.interceptors.response.use((res) => {
     if (!err) {
         addLog('error', 1)
     }
-    else if (err.response && err.response.data && err.response.data.detail && err.response.data.detail.message) {
-        addLog(err.response.data.detail.message, 1)
+    else if (err.response && err.response.data && err.response.data.detail && err.response.data.detail) {
+        console.log(err.response)
+        addLog(err.response.data.detail, 1)
     }
     else if (err.message) {
         addLog(err.message, 1)

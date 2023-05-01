@@ -24,12 +24,15 @@ export const DefaultLayout = () => {
             <header className="w-full h-12 bg-slate-400 absolute">
                 <div className='container mx-auto w-full h-full flex items-center justify-between'>
                     <Link to='/'>
-                        <img src="/cal.svg" alt="kalendarz" />
+                        <div className="flex items-end space-x-2">
+                            <img className="w-8 h-8" src="/cal.svg" alt="kalendarz" />
+                            <span className="text-slate-900">strona domowa</span>
+                        </div>
                     </Link>
                     {loggedIn ?
                         <div className="flex space-x-4 items-center px-1">
                             <Link className='underline text-slate-900' to='/profile'>{username}</Link>
-                            <button className='bg-inherit underline text-slate-900' onClick={handleLogOut}>log out</button>
+                            <button className='bg-inherit underline text-slate-900' onClick={handleLogOut}>wyloguj</button>
                         </div>
                         :
                         <Link className='underline text-slate-900' to='/login'>login</Link>
