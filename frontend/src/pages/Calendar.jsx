@@ -285,47 +285,47 @@ export const Calendar = () => {
                         {/* ADMIN ONLY */}
                         {jobEdit ? <>
                             {step === 1 ? <>
-                                <div className="flex flex-col">
-                                    <label htmlFor="job-date-from" className="text-xs">start zlecenia</label>
+                                <div className="flex flex-col space-y-1">
+                                    <label htmlFor="job-date-from" className="text-sm">Data rozpoczęcia zlecenia</label>
                                     <input type="date" id="job-date-from" value={job.dateFrom} onChange={e => setJob({ ...job, dateFrom: e.target.value })} />
                                 </div>
-                                <div className="flex flex-col">
-                                    <label htmlFor="job-date-to" className="text-xs">koniec zlecenia</label>
+                                <div className="flex flex-col space-y-1">
+                                    <label htmlFor="job-date-to" className="text-sm">Data zakończenia zlecenia</label>
                                     <input type="date" id="job-date-to" value={job.dateTo} onChange={e => setJob({ ...job, dateTo: e.target.value })} />
                                 </div>
-                                <div className="flex flex-col">
-                                    <label htmlFor="job-name" className="text-xs">nazwa zlecenia</label>
+                                <div className="flex flex-col space-y-1">
+                                    <label htmlFor="job-name" className="text-sm">Nazwa zlecenia</label>
                                     <input type="text" id="job-name" value={job.name} onChange={e => setJob({ ...job, name: e.target.value })} />
                                 </div>
-                                <div className="flex flex-col">
-                                    <label htmlFor="job-desc" className="text-xs">kontrahent/miescje</label>
+                                <div className="flex flex-col space-y-1">
+                                    <label htmlFor="job-desc" className="text-sm">Kontrahent, miejsce</label>
                                     <textarea id="job-desc" rows="5" className="rounded-sm p-1 text-black" value={job.desc} onChange={e => setJob({ ...job, desc: e.target.value })} ></textarea>
                                 </div>
                                 <hr />
                                 <div className="w-full flex justify-between">
-                                    <button className="bg-rose-500 p-1 rounded-sm" onClick={closeAll}>anuluj</button>
-                                    <button className="bg-emerald-500 p-1 rounded-sm" onClick={nextStep}>dalej</button>
+                                    <button className="bg-rose-500 p-1 rounded-sm" onClick={closeAll}>Anuluj</button>
+                                    <button className="bg-emerald-500 p-1 rounded-sm" onClick={nextStep}>Dalej</button>
                                 </div>
                             </> : step === 2 ? <>
-                                <p>nazwa: {job.name}</p>
-                                <p>kontrahent/miejsce: {job.desc}</p>
+                                <p>Nazwa: {job.name}</p>
+                                <p>Kontrahent, miejsce: {job.desc}</p>
                                 {serviceDays.map(d => (
                                     <div className="flex flex-col w-full bg-slate-700 p-1 space-y-1">
-                                        <p className="text-sm text-rose-500">{d}</p>
-                                        {jobServices[d] && jobServices[d].length === 0 ? <p className="text-xs">brak uslug na ten dzien, dodaj</p> : <>
+                                        {jobServices[d] && jobServices[d].length === 0 ? <p className="text-xs text-yellow-500"><span className="text-sm text-rose-500">{d}</span> - Brak usług w danym dniu. Dodaj.</p> : <>
+                                            <p className="text-sm text-rose-500">{d}</p>
                                             <ul className="list-disc list-inside">
                                                 {jobServices[d].map((li, lIndex) => (
-                                                    <li key={lIndex} className="text-xs cursor-pointer hover:text-rose-500" onClick={() => handleNewServiceDelete(d, lIndex)}>
-                                                        {availableServices[li.serviceType]} - {li.estTime}h - {li.estPersons} osob
+                                                    <li key={lIndex} className="text-xs cursor-pointer hover:text-rose-500 flex" onClick={() => handleNewServiceDelete(d, lIndex)}>
+                                                        {availableServices[li.serviceType]} - {li.estTime}h - liczba osób: {li.estPersons}
                                                     </li>
                                                 ))}
                                             </ul>
                                         </>}
 
                                         <div className="flex flex-col lg:flex-row lg:items-end lg:space-x-2">
-                                            <div className="flex flex-col">
-                                                <label className="text-xs" htmlFor="service-type">rodzaj uslugi</label>
-                                                <select id="service-type" className="flex" name="serviceType" value={newServiceDays[d].serviceType} onChange={(e) => handleNewServicesDaysChange(d, e)} >
+                                            <div className="flex flex-col f-full">
+                                                <label className="text-xs" htmlFor="service-type">Rodzaj usługi</label>
+                                                <select id="service-type" className="h-full" name="serviceType" value={newServiceDays[d].serviceType} onChange={(e) => handleNewServicesDaysChange(d, e)} >
                                                     <option value="">wybierz</option>
                                                     {Object.keys(availableServices).map(s => (
                                                         <option value={s}>{availableServices[s]}</option>
@@ -334,31 +334,31 @@ export const Calendar = () => {
                                             </div>
 
                                             <div className="flex flex-col">
-                                                <label className="text-xs" htmlFor="est-time">przwidywany czas</label>
-                                                <input id="est-time" type="number" min="1" name="estTime" value={newServiceDays[d].estTime} onChange={(e) => handleNewServicesDaysChange(d, e)} />
+                                                <label className="text-xs" htmlFor="est-time">Przewidywana liczba godzin</label>
+                                                <input id="est-time" type="number" min="1" max="24" name="estTime" className="w-full" value={newServiceDays[d].estTime} onChange={(e) => handleNewServicesDaysChange(d, e)} />
                                             </div>
 
                                             <div className="flex flex-col">
-                                                <label className="text-xs" htmlFor="est-time">przwidywana liczba osob</label>
-                                                <input id="est-time" type="number" min="1" name="estPersons" value={newServiceDays[d].estPersons} onChange={(e) => handleNewServicesDaysChange(d, e)} />
+                                                <label className="text-xs" htmlFor="est-time">Przewidywana liczba osób</label>
+                                                <input id="est-time" type="number" min="1" max="24" name="estPersons" className="w-full" value={newServiceDays[d].estPersons} onChange={(e) => handleNewServicesDaysChange(d, e)} />
                                             </div>
-                                            <button className="p-1 bg-orange-500 rounded-sm text-sm" onClick={() => handleNewServiceAdd(d)}>dodaj usluge do dnia</button>
+                                            <button className="p-1 bg-orange-500 rounded-sm text-sm h-full" onClick={() => handleNewServiceAdd(d)}>Dodaj do dnia</button>
                                         </div>
                                         <hr />
                                     </div>
                                 ))}
                                 <div className="flex justify-between">
-                                    <button className="p-1 rounded-sm bg-cyan-500" onClick={() => setStep(i => i - 1)}>wstecz</button>
-                                    <button className="p-1 rounded-sm bg-emerald-500" onClick={handleJobAdd}>dodaj</button>
+                                    <button className="p-1 rounded-sm bg-cyan-500" onClick={() => setStep(i => i - 1)}>Wstecz</button>
+                                    <button className="p-1 rounded-sm bg-emerald-500" onClick={handleJobAdd}>Dodaj</button>
                                 </div>
                             </> : null}
                         </> : selectedDay ? <>
                             {selectedDay in savedJobs ? <>
                                 <div className="flex w-full justify-between items-center">
                                     <p>{dayOfWeek(selectedDay)} {selectedDay.split('-').reverse().join('.')}r.</p>
-                                    <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
+                                    <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>Zamknij</button>
                                 </div>
-                                <p>zlecenia:</p>
+                                <p>Zlecenia:</p>
                                 <ul className="list-disc list-inside">
                                     {savedJobs[selectedDay].map(j => (
                                         <li className="cursor-pointer hover:underline" onClick={() => { setSelectedDay(null); setSelectedJob(j.id) }}>
@@ -369,25 +369,25 @@ export const Calendar = () => {
                             </> : <>
                                 <div className="w-full flex items-center justify-between">
                                     <p>{dayOfWeek(selectedDay)} {selectedDay.split('-').reverse().join('.')}r.</p>
-                                    <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
+                                    <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>Zamknij</button>
                                 </div>
-                                <p>brak zleceń</p>
+                                <p>Brak zleceń</p>
                             </>}
                         </> : selectedJob ?
                             <div className="flex flex-col items-start min-w-96">
-                                {!selectedJobDetail ? <p>ladowanie</p> : <>
+                                {!selectedJobDetail ? <p>Ładowanie</p> : <>
                                     <div className="w-full">
                                         <div className="w-full flex justify-between items-center">
                                             <p className="font-bold">Zlecenie nr. {selectedJob}</p>
-                                            {!admin ? null : <button className="p-1 bg-rose-500 rounded-sm" onClick={handleJobDelete}>usuń</button>}
+                                            {!admin ? null : <button className="p-1 bg-rose-500 rounded-sm" onClick={handleJobDelete}>Usuń</button>}
                                         </div>
-                                        <p>nazwa: {selectedJobDetail.name}</p>
-                                        <p>kontrahent/miejsce: {selectedJobDetail.contractor_place}</p>
+                                        <p>Nazwa: {selectedJobDetail.name}</p>
+                                        <p>Kontrahent, miejsce: {selectedJobDetail.contractor_place}</p>
                                     </div>
 
                                     <div className="w-full">
                                         {selectedJobDetail.accepted === false ? <div className="w-full space-y-2">
-                                            <p>status: niezaakceptowane</p>
+                                            <p>Status: niezaakceptowane</p>
                                             <div className="w-full overflow-x-auto">
                                                 <table className="w-full text-xs border-slate-600 border">
                                                     <thead>
@@ -412,11 +412,11 @@ export const Calendar = () => {
                                             </div>
 
                                             <div className="w-full flex justify-between">
-                                                <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
-                                                {coordinator ? <button className="p-1 rounded-sm bg-emerald-500" onClick={acceptJob}>zaakceptuj zlecenie</button> : null}
+                                                <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>Zamknij</button>
+                                                {coordinator ? <button className="p-1 rounded-sm bg-emerald-500" onClick={acceptJob}>Zaakceptuj zlecenie</button> : null}
                                             </div>
                                         </div> : selectedJobDetail.accepted === true && selectedJobDetail.finished === false ? <div className="w-full">
-                                            <p>status: zaakceptowane, niezakonczone</p>
+                                            <p>Status: zaakceptowane, niezakonczone</p>
 
                                             <table className="w-full text-xs hidden lg:table">
                                                 <thead>
@@ -448,7 +448,7 @@ export const Calendar = () => {
                                                                     : '-'}
                                                             </> : <span>{s.real_personel}</span>}
                                                             <th>{(s.real_personel && s.real_time) || !coordinator ? '-' :
-                                                                <button className="p-1 rounded-sm bg-cyan-500" onClick={() => updateServiceDay(s.id)}>zapisz</button>}
+                                                                <button className="p-1 rounded-sm bg-cyan-500" onClick={() => updateServiceDay(s.id)}>Zapisz</button>}
                                                             </th>
                                                         </tr>
                                                     ))}
@@ -459,26 +459,26 @@ export const Calendar = () => {
                                                 {selectedJobDetail.services.map(s => (
                                                     <>
                                                         <div className="flex flex-col p-1 bg-slate-700 w-full rounded-sm" key={s.day}>
-                                                            <p className="text-sm">data: {s.day.split('-').reverse().join('.')}r.</p>
-                                                            <p className="text-sm">przewidywana liczna godzin: {s.estimated_time}</p>
+                                                            <p className="text-sm">Data: {s.day.split('-').reverse().join('.')}r.</p>
+                                                            <p className="text-sm">Przewidywana liczba godzin: {s.estimated_time}</p>
                                                             <div className="flex flex-col">
                                                                 {!s.real_time && jobServicesAccepted[s.id] ? <>
                                                                     {coordinator ? <div className="flex flex-col py-2">
-                                                                        <label className="text-xs">faktyczna liczba godzin</label>
+                                                                        <label className="text-xs">Faktyczna liczba godzin</label>
                                                                         <input type="number" min="1" name="realTime" value={jobServicesAccepted[s.id].realTime} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
                                                                     </div> : null}
-                                                                </> : <p className="text-sm">faktyczna liczba godzin: {s.real_time}</p>}
+                                                                </> : <p className="text-sm">Faktyczna liczba godzin: {s.real_time}</p>}
                                                             </div>
-                                                            <p className="text-sm">przewidywana liczna osob: {s.estimated_personel}</p>
+                                                            <p className="text-sm">Przewidywana liczna osob: {s.estimated_personel}</p>
                                                             <div className="flex flex-col">
                                                                 {!s.real_personel && jobServicesAccepted[s.id] ? <>
                                                                     {coordinator ? <div className="flex flex-col py-2">
-                                                                        <label className="text-xs">faktyczna liczba osob</label>
+                                                                        <label className="text-xs">Faktyczna liczba osob</label>
                                                                         <input type="number" min="1" name="realPersons" value={jobServicesAccepted[s.id].realPersons} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
                                                                     </div> : null}
-                                                                </> : <p className="text-sm">faktyczna libcza osob: {s.real_personel}</p>}
+                                                                </> : <p className="text-sm">Faktyczna libcza osob: {s.real_personel}</p>}
                                                             </div>
-                                                            {(s.real_personel && s.real_time) || !coordinator ? null : <button className="p-1 rounded-sm bg-cyan-500" onClick={() => updateServiceDay(s.id)}>zapisz</button>}
+                                                            {(s.real_personel && s.real_time) || !coordinator ? null : <button className="p-1 rounded-sm bg-cyan-500" onClick={() => updateServiceDay(s.id)}>Zapisz</button>}
                                                         </div>
                                                     </>
                                                 ))}
@@ -487,18 +487,18 @@ export const Calendar = () => {
                                                 <div className="flex flex-col w-full pt-2 space-y-1">
                                                     <div className="space-x-1">
                                                         <input id="do-transport" type="checkbox" onChange={() => setDoTransport(i => !i)} />
-                                                        <label htmlFor="do-transport" className="underline">wprowadz koszty transportu</label>
+                                                        <label htmlFor="do-transport">Wprowadź koszty transportu</label>
                                                     </div>
-                                                    {doTransport === true ? <div className="flex flex-col">
-                                                        <label className="text-xs">koszty transportu</label>
+                                                    {doTransport === true ? <div className="flex flex-col space-y-1">
+                                                        <label className="text-sm">Koszty transportu</label>
                                                         <input className="max-w-[250px]" type="number" min="0" name="transport" value={finishData.transport} onChange={handleFinishData} />
                                                     </div> : null}
                                                     <div className="space-x-1">
                                                         <input id="do-accommodation" type="checkbox" onChange={() => setDoAccommodation(i => !i)} />
-                                                        <label htmlFor="do-accommodation" className="underline">wprowadz koszty zakwaterowania</label>
+                                                        <label htmlFor="do-accommodation">Wprowadź koszty zakwaterowania</label>
                                                     </div>
-                                                    {doAccommodation === true ? <div className="flex flex-col">
-                                                        <label className="text-xs">koszty zakwaterowania</label>
+                                                    {doAccommodation === true ? <div className="flex flex-col space-y-1">
+                                                        <label className="text-sm">Koszty zakwaterowania</label>
                                                         <input className="max-w-[250px]" type="number" min="0" name="accommodation" value={finishData.accommodation} onChange={handleFinishData} />
                                                     </div> : null}
                                                     <div className="w-full flex justify-between">
@@ -507,12 +507,12 @@ export const Calendar = () => {
                                                     </div>
                                                 </div> :
                                                 <div className="w-full flex justify-between pt-2">
-                                                    <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>zamknij</button>
-                                                    {coordinator ? <button className="p-1 rounded-sm bg-emerald-500" onClick={isJobReadyToFinish}>wprowadz dane koncowe</button> : null}
+                                                    <button className="p-1 rounded-sm bg-rose-500" onClick={closeAll}>Zamknij</button>
+                                                    {coordinator ? <button className="p-1 rounded-sm bg-emerald-500" onClick={isJobReadyToFinish}>Wprowadź dane końcowe</button> : null}
                                                 </div>
                                             }
                                         </div> : selectedJobDetail.accepted === true && selectedJobDetail.finished === true ? <div className="space-y-2">
-                                            <p>status: zakończone</p>
+                                            <p>Status: zakończone</p>
                                             <div className="w-full overflow-x-auto">
                                                 <table className="w-full text-xs border-slate-600 border">
                                                     <thead>
@@ -557,7 +557,7 @@ export const Calendar = () => {
                                                     </tbody>
                                                 </table>
                                             </div>
-                                            <button className="mt-4 rounded-sm p-1 text-sm bg-rose-500" onClick={closeAll}>zamknij</button>
+                                            <button className="mt-4 rounded-sm p-1 text-sm bg-rose-500" onClick={closeAll}>Zamknij</button>
                                         </div> : null
                                         }
                                     </div>
@@ -571,12 +571,12 @@ export const Calendar = () => {
             </>
             }
             <div className="space-y-4 h-full overflow-y-auto">
-                {admin ? <button className="p-1 bg-emerald-500 rounded-sm my-1" onClick={() => { setModal(i => !i); setJobEdit(true) }}>dodaj zlecenie</button> : null}
+                {admin ? <button className="p-1 bg-emerald-500 rounded-sm my-1" onClick={() => { setModal(i => !i); setJobEdit(true) }}>Dodaj zlecenie</button> : null}
                 {days.length === 0 ? null : <>
                     <div className="w-full flex justify-between mt-4">
-                        <button className="underline" onClick={previousMonth}>poprzedni</button>
+                        <button className="underline text-xs md:text-sm" onClick={previousMonth}>poprzedni miesiąc</button>
                         <p className="text-center text-2xl">{date.month ? monthNames[date.month] : '-'} {date.year}</p>
-                        <button className="underline" onClick={nextMonth}>następny</button>
+                        <button className="underline text-xs md:text-sm" onClick={nextMonth}>następny miesiąc</button>
                     </div>
                     <table className="hidden xl:table table-fixed w-full border-collapse border border-cyan-600">
                         <thead>

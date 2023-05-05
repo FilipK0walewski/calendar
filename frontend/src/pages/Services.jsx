@@ -71,8 +71,8 @@ export const Services = () => {
                                     <label className="text-xs">cena/h</label>
                                     <input type="number" min="0" required value={price || ""} onChange={e => setPrice(e.target.value)} />
                                 </div>
-                                <button className="p-1 rounded-sm bg-emerald-500 w-full">dodaj</button>
-                                <button className="p-1 rounded-sm bg-slate-500 w-full" onClick={() => setAdding(false)}>anuluj</button>
+                                <button className="p-1 rounded-sm bg-emerald-500 w-full">Dodaj</button>
+                                <button className="p-1 rounded-sm bg-slate-500 w-full" onClick={() => setAdding(false)}>Anuluj</button>
                             </form>
                         </> : selected !== null ? <>
                             <p>edycja</p>
@@ -85,9 +85,9 @@ export const Services = () => {
                                     <label className="text-xs">cena/h</label>
                                     <input type="number" min="0" required value={price || ""} onChange={e => setPrice(e.target.value)} />
                                 </div>
-                                <button className="p-1 rounded-sm bg-emerald-500 w-full">zapisz</button>
-                                <button className="p-1 rounded-sm bg-rose-500 w-full" onClick={() => handleServiceDelete()}>usun</button>
-                                <button className="p-1 rounded-sm bg-slate-500 w-full" onClick={() => setSelected(null)}>anuluj</button>
+                                <button className="p-1 rounded-sm bg-emerald-500 w-full">Zapisz</button>
+                                <button className="p-1 rounded-sm bg-rose-500 w-full" onClick={() => handleServiceDelete()}>Usuń</button>
+                                <button className="p-1 rounded-sm bg-slate-500 w-full" onClick={() => setSelected(null)}>Anuluj</button>
                             </form>
                         </> : <p>coś nie tak</p>}
                     </div>
@@ -96,7 +96,7 @@ export const Services = () => {
             {!services ? <p>ladowanie...</p> : <>
                 <div className="w-full flex justify-between py-1">
                     <p className="text-lg">{Object.keys(services).length === 0 ? 'brak serwisow' : 'serwisy'}</p>
-                    <button className="bg-emerald-500 p-1 rounded-sm" onClick={() => setAdding(true)}>dodaj</button>
+                    <button className="bg-emerald-500 p-1 rounded-sm" onClick={() => setAdding(true)}>Dodaj</button>
                 </div>
                 <ul className="list-disc list-inside">
                     {Object.keys(services).map(i => (

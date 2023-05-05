@@ -9,9 +9,9 @@ export const Home = () => {
         <>
             <h1 className="text-xl">Witaj {username}!</h1>
             <ul className="list-disc list-inside">
-                <li className="underline"><Link to='/calendar'>kalendarz</Link></li>
-                {admin === true ? <li className="underline"><Link to='/types-of-services'>zarządzanie rodzajami usług</Link></li> : null}
-                <li className="underline"><Link to='/finished-jobs'>zakończone zlecenia</Link></li>
+                <li><Link to='/calendar'>Kalendarz</Link></li>
+                {admin === true ? <li><Link to='/types-of-services'>Zarządzanie rodzajami usług</Link></li> : null}
+                <li><Link to='/finished-jobs'>Zakończone zlecenia</Link></li>
             </ul>
         </>
     )
