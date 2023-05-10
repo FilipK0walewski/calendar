@@ -20,24 +20,31 @@ async def get_jobs():
         for d in range((job['date_to'] - job['date_from']).days + 1):
             current_date = job['date_from'] + timedelta(days=d)
             if current_date not in days:
-                days[current_date] = []
-            
-            days[current_date].append(job_data)
+                est_personel = await db.fetch_one('select sum(estimated_personel) from services where day = :day', {'day': current_date})
+                print(dict(est_personel._mapping))
+                days[current_date] = {'personel_sum': est_personel._mapping['sum'], 'jobs': []}
+            days[current_date]['jobs'].append(job_data)
     return days
 
 
 @router.get('/finished')
 async def get_finished_jobs():
     data = []
-    jobs = await db.fetch_all('select id, name, contractor_place, date_from, date_to, transport_cost, accommodation_cost from jobs where finished = true')
+    jobs = await db.fetch_all('select id, name, contractor_place, date_from, date_to, transport_cost, accommodation_cost, confirmed from jobs where finished = true order by id')
     for job in jobs:
         job = dict(job._mapping)
         services = await db.fetch_all('select name, price, real_time, real_personel from services where job_id = :id', {'id': job['id']})
-        services_cost_sum = sum([i._mapping['price'] * i._mapping['real_time'] for i in services])
+        services_cost_sum = sum([i._mapping['price'] * i._mapping['real_time'] * i._mapping['real_personel'] for i in services])
         job['all_costs'] = services_cost_sum + job['accommodation_cost'] + job['transport_cost']
         job['services'] = services
         data.append(job)
     return data
+
+
+@router.get('/confirm/{job_id}')
+async def confirm_job(job_id: int):
+    await db.execute('update jobs set confirmed = true where id = :id', {'id': job_id})
+    return {'message': f'Zlecenie nr {job_id} zatwierdzone.'}
 
 
 @router.get('/{job_id}')

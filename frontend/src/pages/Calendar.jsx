@@ -360,7 +360,7 @@ export const Calendar = () => {
                                 </div>
                                 <p>Zlecenia:</p>
                                 <ul className="list-disc list-inside">
-                                    {savedJobs[selectedDay].map(j => (
+                                    {savedJobs[selectedDay]['jobs'].map(j => (
                                         <li className="cursor-pointer hover:underline" onClick={() => { setSelectedDay(null); setSelectedJob(j.id) }}>
                                             {j.name} - {j.finished ? 'zakończone' : j.accepted ? 'zaakceptowane' : 'niezaakceptowane'}
                                         </li>
@@ -595,16 +595,16 @@ export const Calendar = () => {
                                                 <td key={`dn-${i}-${j}`} className="h-20 border border-slate-400 bg-slate-700"></td>
                                                 :
                                                 <td onClick={() => { setModal(true); setSelectedDay(d) }} key={`d-${i}-${j}`} className="h-32 border border-slate-400 hover:bg-slate-600 hover:cursor-pointer px-1 py-2">
-                                                    <div className="w-full h-full flex flex-col items-center space-y-4">
+                                                    <div className="w-full h-full flex flex-col items-center space-y-1">
                                                         <div className="w-8 h-8 bg-cyan-500 flex items-center justify-center rounded-full">
                                                             {d.split('-')[2]}
                                                         </div>
+                                                        {savedJobs[d] ? <span className="text-xs">liczba osób: {savedJobs[d]['personel_sum']}</span> : null}
                                                         {!savedJobs[d] ? null : <ul className="w-full space-y-1">
-                                                            {savedJobs[d].map(k => (
+                                                            {savedJobs[d]['jobs'].map(k => (
                                                                 <li className={`text-xs p-1 rounded text-center ${k.finished === true ? 'bg-emerald-500' : k.accepted !== true ? 'bg-rose-500' : 'bg-amber-500'}`}>{k.name}({k.id})</li>
                                                             ))}
-                                                        </ul>
-                                                        }
+                                                        </ul>}
                                                     </div>
                                                 </td>
                                             }
@@ -621,9 +621,10 @@ export const Calendar = () => {
                                     {d === null ? null :
                                         <div key={j} className="bg-slate-600 px-2 py-4 roundex-xs hover:bg-slate-800 hover:cursor-pointer space-y-2" onClick={() => { setModal(true); setSelectedDay(d) }}>
                                             <p className="text-xs font-bold">{d} - tydzien {i + 1} - {dayNames[j]}</p>
+                                            {savedJobs[d] ? <span className="text-xs">liczba osób: {savedJobs[d]['personel_sum']}</span> : null}
                                             {!savedJobs[d] ? null : <>
                                                 <div className="flex flex-wrap space-x-2">
-                                                    {savedJobs[d].map(k => (
+                                                    {savedJobs[d]['jobs'].map(k => (
                                                         <div className={`p-2 text-xs h-max rounded-sm ${k.accepted !== true ? 'bg-rose-500' : 'bg-emerald-500'}`} key={k.id}>
                                                             {k.name}({k.id})
                                                         </div>
