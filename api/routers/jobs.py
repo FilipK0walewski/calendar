@@ -33,8 +33,15 @@ async def get_finished_jobs():
     jobs = await db.fetch_all('select id, name, contractor_place, date_from, date_to, transport_cost, accommodation_cost, confirmed from jobs where finished = true order by id')
     for job in jobs:
         job = dict(job._mapping)
-        services = await db.fetch_all('select name, price, real_time, real_personel from services where job_id = :id', {'id': job['id']})
-        services_cost_sum = sum([i._mapping['price'] * i._mapping['real_time'] * i._mapping['real_personel'] for i in services])
+        services = await db.fetch_all('select a.name, a.price, real_time, real_personel, b.price_per_hour from services a join types_of_services b on a.service_type_id = b.id where job_id = :id', {'id': job['id']})
+        
+        services_cost_sum = 0
+        for service in services:
+            if service._mapping['price_per_hour'] == True:
+                services_cost_sum += service._mapping['price'] * service._mapping['real_time'] * service._mapping['real_personel']
+                continue
+            services_cost_sum += service._mapping['price'] * service._mapping['real_time']
+
         job['all_costs'] = services_cost_sum + job['accommodation_cost'] + job['transport_cost']
         job['services'] = services
         data.append(job)

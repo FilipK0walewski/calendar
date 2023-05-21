@@ -17,11 +17,13 @@ async def get_services():
 class Service(BaseModel):
     name: str
     price: float
+    pricePerHour: bool
 
 
 @router.post('/')
 async def add_service(service: Service):
-    await db.execute('insert into types_of_services(name, price) values (:name, :price)', {'name': service.name, 'price': service.price})
+    values = {'name': service.name, 'price': service.price, 'hour': service.pricePerHour, 'unit': not service.pricePerHour}
+    await db.execute('insert into types_of_services(name, price, price_per_hour, price_per_unit) values (:name, :price, :hour, :unit)', values)
     return {'message': 'Usługa dodana.'}
 
 
@@ -30,7 +32,9 @@ async def edit_service(service_id: int, service: Service):
     res = await db.fetch_one('select 1 from types_of_services where id != :id and name = :name', {'id': service_id, 'name': service.name})
     if res is not None:
         raise HTTPException(status_code=400, detail={'message': 'Usługa o tej nazwie już istnieje.'})
-    await db.execute('update types_of_services set name = :name, price = :price where id = :id', {'id': service_id, 'name': service.name, 'price': service.price})
+
+    values = {'id': service_id, 'name': service.name, 'price': service.price, 'hour': service.pricePerHour, 'unit': not service.pricePerHour}
+    await db.execute('update types_of_services set name = :name, price = :price, price_per_hour = :hour, price_per_unit = :unit where id = :id', values)
     return {'message': 'Usługa zaktualizowana.'}
 
 

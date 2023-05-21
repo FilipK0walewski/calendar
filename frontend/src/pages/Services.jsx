@@ -7,6 +7,8 @@ export const Services = () => {
 
     const [name, setName] = useState()
     const [price, setPrice] = useState()
+    const [pricePerHour, setPricePerHour] = useState(true)
+
     const [services, setServices] = useState()
 
     const getServices = () => {
@@ -17,7 +19,7 @@ export const Services = () => {
 
     const handleServiceAdd = (e) => {
         e.preventDefault()
-        instance.post('/services', { name, price }).then(() => {
+        instance.post('/services', { name, price, pricePerHour }).then(() => {
             getServices()
             setAdding(false)
         })
@@ -25,7 +27,7 @@ export const Services = () => {
 
     const handleServiceEdit = (e) => {
         e.preventDefault()
-        instance.put(`/services/${selected}`, { name, price }).then(() => {
+        instance.put(`/services/${selected}`, { name, price, pricePerHour }).then(() => {
             getServices()
             setSelected(null)
         })
@@ -48,6 +50,7 @@ export const Services = () => {
         if (selected === null) return
         setName(services[selected].name)
         setPrice(services[selected].price)
+        setPricePerHour(services[selected].price_per_hour)
     }, [selected])
 
     useEffect(() => {
@@ -68,8 +71,16 @@ export const Services = () => {
                                     <input type="text" required value={name || ""} onChange={e => setName(e.target.value)} />
                                 </div>
                                 <div className="flex flex-col">
-                                    <label className="text-xs">cena/h</label>
+                                    <label className="text-xs">cena</label>
                                     <input type="number" min="0" required value={price || ""} onChange={e => setPrice(e.target.value)} />
+                                </div>
+                                <div className="space-x-2">
+                                    <input id="price-per-hour" type="checkbox" checked={pricePerHour} onChange={() => setPricePerHour(i => !i)} />
+                                    <label htmlFor="price-per-hour">cena za godzine</label>
+                                </div>
+                                <div className="space-x-2">
+                                    <input id="price-per-hour" type="checkbox" checked={!pricePerHour} onChange={() => setPricePerHour(i => !i)} />
+                                    <label htmlFor="price-per-hour">cena za sztuke</label>
                                 </div>
                                 <button className="p-1 rounded-sm bg-emerald-500 w-full">Dodaj</button>
                                 <button className="p-1 rounded-sm bg-slate-500 w-full" onClick={() => setAdding(false)}>Anuluj</button>
@@ -82,8 +93,16 @@ export const Services = () => {
                                     <input type="text" required value={name || ""} onChange={e => setName(e.target.value)} />
                                 </div>
                                 <div className="flex flex-col">
-                                    <label className="text-xs">cena/h</label>
+                                    <label className="text-xs">cena</label>
                                     <input type="number" min="0" required value={price || ""} onChange={e => setPrice(e.target.value)} />
+                                </div>
+                                <div className="space-x-2">
+                                    <input id="price-per-hour" type="checkbox" checked={pricePerHour} onChange={() => setPricePerHour(i => !i)} />
+                                    <label htmlFor="price-per-hour">cena za godzine</label>
+                                </div>
+                                <div className="space-x-2">
+                                    <input id="price-per-hour" type="checkbox" checked={!pricePerHour} onChange={() => setPricePerHour(i => !i)} />
+                                    <label htmlFor="price-per-hour">cena za sztuke</label>
                                 </div>
                                 <button className="p-1 rounded-sm bg-emerald-500 w-full">Zapisz</button>
                                 <button className="p-1 rounded-sm bg-rose-500 w-full" onClick={() => handleServiceDelete()}>Usuń</button>
@@ -100,7 +119,7 @@ export const Services = () => {
                 </div>
                 <ul className="list-disc list-inside">
                     {Object.keys(services).map(i => (
-                        <li key={i} value={i} className="underline cursor-pointer hover:text-rose-500 w-max" onClick={() => setSelected(i)}>{services[i].name} - {services[i].price} zł</li>
+                        <li key={i} value={i} className="underline cursor-pointer hover:text-rose-500 w-max" onClick={() => setSelected(i)}>{services[i].name} - {services[i].price} zł / {services[i].price_per_hour ? 'godzine' : 'sztuke'}</li>
                     ))}
                 </ul>
             </>

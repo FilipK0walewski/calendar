@@ -97,7 +97,7 @@ export const Calendar = () => {
         instance.get('/services').then(res => {
             const tmp = {}
             for (let i of res.data) {
-                tmp[i.id] = i.name
+                tmp[i.id] = { name: i.name, pricePerHour: i.price_per_hour }
             }
             setAvailableServices(tmp)
         })
@@ -211,10 +211,12 @@ export const Calendar = () => {
 
     const handleNewServicesDaysChange = (d, e) => {
         console.log(d, e.target.name, e.target.value)
+        console.log(availableServices[e.target.value])
         setNewServiceDays({ ...newServiceDays, [d]: { ...newServiceDays[d], [e.target.name]: e.target.value } });
     }
 
     const handleNewServiceAdd = (d) => {
+        console.log(newServiceDays[d].serviceType)
         if (!newServiceDays[d].serviceType) {
             dispatch(addNotification({ text: 'Wybierz rodzaj uslugi.', type: 0 }))
             return
@@ -316,7 +318,8 @@ export const Calendar = () => {
                                             <ul className="list-disc list-inside">
                                                 {jobServices[d].map((li, lIndex) => (
                                                     <li key={lIndex} className="text-xs cursor-pointer hover:text-rose-500 flex" onClick={() => handleNewServiceDelete(d, lIndex)}>
-                                                        {availableServices[li.serviceType]} - {li.estTime}h - liczba osób: {li.estPersons}
+
+                                                        {availableServices[li.serviceType].name}{availableServices[li.serviceType].pricePerHour ? ` - liczba godzin: ${li.estTime}` : null} - liczba osób: {li.estPersons}
                                                     </li>
                                                 ))}
                                             </ul>
@@ -328,15 +331,14 @@ export const Calendar = () => {
                                                 <select id="service-type" className="h-full" name="serviceType" value={newServiceDays[d].serviceType} onChange={(e) => handleNewServicesDaysChange(d, e)} >
                                                     <option value="">wybierz</option>
                                                     {Object.keys(availableServices).map(s => (
-                                                        <option value={s}>{availableServices[s]}</option>
+                                                        <option value={s}>{availableServices[s].name}</option>
                                                     ))}
                                                 </select>
                                             </div>
-
-                                            <div className="flex flex-col">
+                                            {newServiceDays[d].serviceType && availableServices[newServiceDays[d].serviceType]['pricePerHour'] === true ? <div className="flex flex-col">
                                                 <label className="text-xs" htmlFor="est-time">Przewidywana liczba godzin</label>
                                                 <input id="est-time" type="number" min="1" max="24" name="estTime" className="w-full" value={newServiceDays[d].estTime} onChange={(e) => handleNewServicesDaysChange(d, e)} />
-                                            </div>
+                                            </div> : null}
 
                                             <div className="flex flex-col">
                                                 <label className="text-xs" htmlFor="est-time">Przewidywana liczba osób</label>
@@ -402,8 +404,8 @@ export const Calendar = () => {
                                                         {selectedJobDetail.services.map(s => (
                                                             <tr key={s.id} className="text-center border-b border-slate-500">
                                                                 <td>{s.day.split('-').reverse().join('.')}r.</td>
-                                                                <td>{availableServices[s.service_type_id]}</td>
-                                                                <td>{s.estimated_time}</td>
+                                                                <td>{availableServices[s.service_type_id].name}</td>
+                                                                <td>{availableServices[s.service_type_id].pricePerHour ? s.estimated_time : '-'}</td>
                                                                 <td>{s.estimated_personel}</td>
                                                             </tr>
                                                         ))}
@@ -423,8 +425,9 @@ export const Calendar = () => {
                                                     <tr className="bg-slate-600">
                                                         <th className="px-4">data</th>
                                                         <th className="px-4">usługa</th>
-                                                        <th className="px-4">przewidywana liczba godzin</th>
-                                                        <th className="px-4">faktyczna liczba godzin</th>
+                                                        <th className="px-4">jednostka</th>
+                                                        <th className="px-4">przewidywana liczba jednostek</th>
+                                                        <th className="px-4">faktyczna liczba jednostek</th>
                                                         <th className="px-4">przewidywana liczba osób</th>
                                                         <th className="px-4">faktyczna liczba osób</th>
                                                         <th className="px-4">akcja</th>
@@ -434,8 +437,9 @@ export const Calendar = () => {
                                                     {selectedJobDetail.services.map((s, sIndex) => (
                                                         <tr key={sIndex} className="text-center">
                                                             <td>{s.day.split('-').reverse().join('.')}r.</td>
-                                                            <td>{availableServices[s.service_type_id]}</td>
-                                                            <td>{s.estimated_time}</td>
+                                                            <td>{availableServices[s.service_type_id].name}</td>
+                                                            <td>{availableServices[s.service_type_id].pricePerHour ? 'godzina' : 'sztuka'}</td>
+                                                            <td>{availableServices[s.service_type_id].pricePerHour ? s.estimated_time : '-'}</td>
                                                             {!s.real_time && jobServicesAccepted[s.id] ? <>
                                                                 {coordinator ?
                                                                     <input type="number" min="1" name="realTime" value={jobServicesAccepted[s.id].realTime} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
@@ -460,14 +464,15 @@ export const Calendar = () => {
                                                     <>
                                                         <div className="flex flex-col p-1 bg-slate-700 w-full rounded-sm" key={s.day}>
                                                             <p className="text-sm">Data: {s.day.split('-').reverse().join('.')}r.</p>
-                                                            <p className="text-sm">Przewidywana liczba godzin: {s.estimated_time}</p>
+                                                            <p className="text-sm font-bold">{s.name}</p>
+                                                            {availableServices[s.service_type_id].pricePerHour === true ? <p className="text-sm">Przewidywana liczba godzin: {s.estimated_time} </p>: null}
                                                             <div className="flex flex-col">
                                                                 {!s.real_time && jobServicesAccepted[s.id] ? <>
                                                                     {coordinator ? <div className="flex flex-col py-2">
-                                                                        <label className="text-xs">Faktyczna liczba godzin</label>
+                                                                        <label className="text-xs">{availableServices[s.service_type_id].pricePerHour === true ? 'Faktyczna liczba godzin' : 'Liczba sztuk'}</label>
                                                                         <input type="number" min="1" name="realTime" value={jobServicesAccepted[s.id].realTime} onChange={(e) => handleJobServicesAccepted(s.id, e)} />
                                                                     </div> : null}
-                                                                </> : <p className="text-sm">Faktyczna liczba godzin: {s.real_time}</p>}
+                                                                </> : <p className="text-sm">{availableServices[s.service_type_id].pricePerHour === true ? 'Faktyczna liczba godzin' : 'Liczba sztuk'}: {s.real_time}</p>}
                                                             </div>
                                                             <p className="text-sm">Przewidywana liczna osob: {s.estimated_personel}</p>
                                                             <div className="flex flex-col">
@@ -540,6 +545,7 @@ export const Calendar = () => {
                                                         <tr className="bg-slate-600 font-normal">
                                                             <th className="px-4">data</th>
                                                             <th className="px-4">usługa</th>
+                                                            <th className="px-4">jendostka</th>
                                                             <th className="px-4">liczba godzin</th>
                                                             <th className="px-4">liczba osób</th>
                                                         </tr>
@@ -549,6 +555,7 @@ export const Calendar = () => {
                                                             <tr className="text-center border-b border-slate-500">
                                                                 <td>{s.day.split('-').reverse().join('.')}r.</td>
                                                                 <td>{s.service_name}</td>
+                                                                <td>{availableServices[s.service_type_id].pricePerHour ? 'godzina' : 'sztuka'}</td>
                                                                 <td>{s.real_time}</td>
                                                                 <td>{s.real_personel}</td>
                                                             </tr>
@@ -599,7 +606,7 @@ export const Calendar = () => {
                                                         <div className="w-8 h-8 bg-cyan-500 flex items-center justify-center rounded-full">
                                                             {d.split('-')[2]}
                                                         </div>
-                                                        {savedJobs[d] ? <span className="text-xs">liczba osób: {savedJobs[d]['personel_sum']}</span> : null}
+                                                        {savedJobs[d] ? <span className="text-xs">Suma potrzebnych osób: {savedJobs[d]['personel_sum']}</span> : null}
                                                         {!savedJobs[d] ? null : <ul className="w-full space-y-1">
                                                             {savedJobs[d]['jobs'].map(k => (
                                                                 <li className={`text-xs p-1 rounded text-center ${k.finished === true ? 'bg-emerald-500' : k.accepted !== true ? 'bg-rose-500' : 'bg-amber-500'}`}>{k.name}({k.id})</li>
@@ -621,7 +628,7 @@ export const Calendar = () => {
                                     {d === null ? null :
                                         <div key={j} className="bg-slate-600 px-2 py-4 roundex-xs hover:bg-slate-800 hover:cursor-pointer space-y-2" onClick={() => { setModal(true); setSelectedDay(d) }}>
                                             <p className="text-xs font-bold">{d} - tydzien {i + 1} - {dayNames[j]}</p>
-                                            {savedJobs[d] ? <span className="text-xs">liczba osób: {savedJobs[d]['personel_sum']}</span> : null}
+                                            {savedJobs[d] ? <span className="text-xs">Suma potrzebnych osób: {savedJobs[d]['personel_sum']}</span> : null}
                                             {!savedJobs[d] ? null : <>
                                                 <div className="flex flex-wrap space-x-2">
                                                     {savedJobs[d]['jobs'].map(k => (

@@ -46,7 +46,13 @@ export const FinishedJobs = () => {
                             <td className="border border-slate-600 px-1">{job.date_from.split('-').reverse().join('.')}</td>
                             <td className="border border-slate-600 px-1"><ul>
                                 {job.services.map((service, j) => (
-                                    <li key={j}>{service.name} - {service.real_personel} os. * {service.real_time}h * {service.price} zł = {service.real_personel * service.real_time * service.price} zł</li>
+                                    <li key={j}>
+                                        {service.price_per_hour === true ? <>
+                                            {service.name} - {service.real_personel} os. * {service.real_time}h * {service.price} zł = {service.real_personel * service.real_time * service.price} zł
+                                        </> : <>
+                                            {service.name} - {service.real_time}sztuk * {service.price} zł = {service.real_time * service.price} zł
+                                        </>}
+                                    </li>
                                 ))}
                                 {job.transport_cost ? <li>transport: {job.transport_cost} zł</li> : null}
                                 {job.accommodation_cost ? <li>zakwaterowanie: {job.accommodation_cost} zł</li> : null}
@@ -70,7 +76,13 @@ export const FinishedJobs = () => {
                             <span className="underline">koszty:</span>
                             <ul className="list-disc list-inside">
                                 {job.services.map((service, j) => (
-                                    <li key={j}>{service.name} - {service.real_personel} os. * {service.real_time}h * {service.price} zł = {service.real_personel * service.real_time * service.price} zł</li>
+                                    <li key={j}>
+                                        {service.price_per_hour === true ? <>
+                                            {service.name} - {service.real_personel} os. * {service.real_time}h * {service.price} zł = {service.real_personel * service.real_time * service.price} zł
+                                        </> : <>
+                                            {service.name} - {service.real_time}sztuk * {service.price} zł = {service.real_time * service.price} zł
+                                        </>}
+                                    </li>
                                 ))}
                                 {job.transport_cost ? <li>transport: {job.transport_cost} zł</li> : null}
                                 {job.accommodation_cost ? <li>zakwaterowanie: {job.accommodation_cost} zł</li> : null}
