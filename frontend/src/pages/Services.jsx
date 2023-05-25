@@ -72,7 +72,7 @@ export const Services = () => {
                                 </div>
                                 <div className="flex flex-col">
                                     <label className="text-xs">cena</label>
-                                    <input type="number" min="0" required value={price || ""} onChange={e => setPrice(e.target.value)} />
+                                    <input step="0.01" type="number" min="0" required value={price || ""} onChange={e => setPrice(e.target.value)} />
                                 </div>
                                 <div className="space-x-2">
                                     <input id="price-per-hour" type="checkbox" checked={pricePerHour} onChange={() => setPricePerHour(i => !i)} />
@@ -94,7 +94,7 @@ export const Services = () => {
                                 </div>
                                 <div className="flex flex-col">
                                     <label className="text-xs">cena</label>
-                                    <input type="number" min="0" required value={price || ""} onChange={e => setPrice(e.target.value)} />
+                                    <input step="0.01" type="number" min="0" required value={price || ""} onChange={e => setPrice(e.target.value)} />
                                 </div>
                                 <div className="space-x-2">
                                     <input id="price-per-hour" type="checkbox" checked={pricePerHour} onChange={() => setPricePerHour(i => !i)} />

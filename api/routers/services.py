@@ -1,3 +1,5 @@
+import math
+
 from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel
 
@@ -11,7 +13,15 @@ router = APIRouter(
 
 @router.get('/')
 async def get_services():
-    return await db.fetch_all('select * from types_of_services')
+    data = await db.fetch_all('select * from types_of_services')
+    res = []
+    for i in data:
+        tmp = dict(i._mapping)
+        price = tmp['price']
+        print(price)
+        tmp['price'] = round(price, 2)
+        res.append(tmp)
+    return res
 
 
 class Service(BaseModel):
